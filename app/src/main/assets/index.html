@@ -115,13 +115,15 @@ html.device .l3{display:none}
 .panel{width:30cqw;background:#17191d;border-radius:1.2cqw;padding:1.8cqw;box-shadow:0 2cqw 5cqw rgba(0,0,0,.6)}
 .opt{display:flex;justify-content:space-between;gap:1cqw;padding:.85cqw 1.2cqw;border-radius:.7cqw;font-size:1.25cqw;font-weight:600;cursor:pointer;transition:background .18s,color .18s}
 .opt b{font-weight:600;opacity:.65;white-space:nowrap}.opt.f{background:#fff;color:#000}
-#all,#lib{place-items:start stretch;align-content:start;padding:4cqw 5cqw;overflow:hidden}#all h4,#lib h4{font-size:2.2cqw}
+#all,#lib,#org{place-items:start stretch;align-content:start;padding:4cqw 5cqw;overflow:hidden}#all h4,#lib h4,#org h4{font-size:2.2cqw}
 .grid.lg{grid-template-columns:repeat(4,minmax(0,1fr))}.grid.lg .cw{width:auto}
 .more{display:grid;place-content:center;text-align:center;background:rgba(255,255,255,.1)}.more b{font-size:1.5cqw}.more span{font-size:1cqw;color:var(--mute)}
 .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1.6cqw}.grid .app{width:auto}
 #set{place-items:stretch end;background:rgba(6,7,9,.6)}
 #set>.side{transform:translateX(100%)}#set.on>.side{transform:none}
 .side{width:40cqw;height:100%;background:#121418;padding:3cqw 2.6cqw;box-shadow:-2cqw 0 5cqw rgba(0,0,0,.5)}
+.sec{margin:1.6cqw 1.2cqw .4cqw;font-size:1cqw;font-weight:700;color:var(--mute);text-transform:none}
+.side h4+.sec{margin-top:0}
 .side p{font-size:1cqw;color:var(--mute);margin:1.4cqw 1.2cqw 0}
 #srch{grid-template-columns:auto minmax(0,1fr);gap:3.5cqw;padding:4cqw 5cqw;place-items:start stretch;align-content:start}
 .sq{width:42cqw;min-height:3.8cqw;font-size:2.2cqw;font-weight:700;border-bottom:.15cqw solid rgba(255,255,255,.35);padding:.3cqw 0;margin-bottom:1.6cqw;display:flex;align-items:center}
@@ -215,6 +217,7 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
     <div class="rows" id="rows"><div class="rin" id="rin"></div></div>
     <div class="ov" id="menu"></div>
     <div class="ov" id="lib"></div>
+    <div class="ov" id="org"></div>
     <div class="ov" id="all"></div>
     <div class="ov" id="set"></div>
     <div class="ov" id="srch"></div>
@@ -263,7 +266,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const tv=$('#tv'),rin=$('#rin'),rowsBox=$('#rows'),okBtn=$('#okBtn'),toastEl=$('#toast');
 const TOPEL=[$('#bSearch'),$('#bWx'),$('#bGear')];
-const OV={lib:$('#lib'),menu:$('#menu'),all:$('#all'),set:$('#set'),search:$('#srch'),fc:$('#fc'),gtv:$('#gtv'),entry:$('#entry'),qc:$('#qc')};
+const OV={org:$('#org'),lib:$('#lib'),menu:$('#menu'),all:$('#all'),set:$('#set'),search:$('#srch'),fc:$('#fc'),gtv:$('#gtv'),entry:$('#entry'),qc:$('#qc')};
 
 /* ---------- Example data (web test) ---------- */
 const MOCK_APPS={
@@ -302,7 +305,7 @@ const MOCK_UP=[
 const MOCK_TVW=[
  {t:'Stranger Things',m:'Season 4 · Episode 3',app:'netflix',p:.4,left:'31 min left',d:'Watching in Netflix',c:['#5a0b0b','#e50914']},
  {t:'Mythbusters Jr.',m:'Episode 6',app:'youtube',p:.7,left:'9 min left',d:'Watching in YouTube',c:['#5a0d0d','#ff4e45']}];
-let TVW=DEVICE?[]:MOCK_TVW;
+let TVW=DEVICE?[]:MOCK_TVW,JF_SID='';
 let CW=DEVICE?[]:MOCK_CW,NEW=DEVICE?[]:MOCK_NEW,RECENT=DEVICE?[]:MOCK_RECENT,UP=DEVICE?[]:MOCK_UP,LIB=[],WATCH=[],JF_UID='';
 let CFG={},WX=null,PHOTOS=[],jfState=DEVICE?'none':'ok',lastJf=0,MODEL='',VER='',VCODE=0,UPD=null,ent=null,qcS=null;
 const NETCB={};let netId=0;
@@ -347,7 +350,7 @@ function mapItem(it,u){
  const ud=it.UserData||{},rt=it.RunTimeTicks||0,pos=ud.PlaybackPositionTicks||0,lm=rt&&pos?Math.max(1,Math.round((rt-pos)/6e8)):0;
  return {id:it.Id,uid:it.__uid||'',t:ep?(it.SeriesName||it.Name):it.Name,
   m:ep?`Season ${it.ParentIndexNumber??'?'} · Episode ${it.IndexNumber??'?'}`:[it.Type==='Series'?'Series':'Movie',it.ProductionYear,it.OfficialRating].filter(Boolean).join(' · '),
-  d:(it.Overview||'').replace(/\s+/g,' ').slice(0,170),u,p:(ud.PlayedPercentage||0)/100,left:lm?fmtLeft(lm):'',c:colors(it.Id),img:back,th}}
+  d:(it.Overview||'').replace(/\s+/g,' ').slice(0,170),u,pos:Math.floor(pos/1e4),p:(ud.PlayedPercentage||0)/100,left:lm?fmtLeft(lm):'',c:colors(it.Id),img:back,th}}
 async function jget(path){
  const j=CFG.jellyfin;
  const r=await net(j.url.replace(/\/+$/,'')+path,{Authorization:jfAuth(j.key)});
@@ -356,6 +359,7 @@ async function jtry(paths){for(const p of paths){try{return await jget(p)}catch(
 async function loadJellyfin(){
  const j=CFG.jellyfin;if(!j||!j.url||!j.key){jfState='none';return}
  lastJf=Date.now();jfState='loading';
+ const si=await jtry(['/System/Info/Public']);if(si&&si.Id)JF_SID=si.Id;
  let users=await jtry(['/Users']);
  if(!Array.isArray(users)&&j.userId)users=[{Id:j.userId,Name:j.userName||'Me'}];
  if(!Array.isArray(users)){jfState='error';return}
@@ -400,7 +404,7 @@ async function loadWeather(){
 
 /* ---------- Saved choices ---------- */
 const INTV=[30,60,300,900],INTVN=['30 sec','1 min','5 min','15 min'],SAVER=[30,60,300,0],SAVERN=['30 sec','1 min','5 min','Off'];
-const S={loc:0,unit:0,intv:DEVICE?2:0,saver:1,big:0,lights:1,wall:0};
+const S={loc:0,unit:0,intv:DEVICE?2:0,saver:1,big:0,lights:1,wall:0,jfuser:1};
 const WALLN=['Photos (or built-in)','Built-in scenes','Jellyfin artwork'];
 const PINKEY=DEVICE?'fl_pin_tv':'fl_pin2';
 let pinned=null;
@@ -415,7 +419,7 @@ function loadPinned(){
 
 /* ---------- State ---------- */
 let mode='home',r=1,c=0,last={},menu=null,ai=0,si=0,moving=-1,hold=null,R=[],spot={t:'none',i:0},hf=0,htT,curY=0;
-let busy=null,saving=false,idleT,sleepEnd=0,sz='k',sk=0,sr=0,q='';
+let allPick=false,busy=null,saving=false,idleT,sleepEnd=0,sz='k',sk=0,sr=0,q='';
 const greet=()=>{const h=new Date().getHours();return h<5?'Good night':h<12?'Good morning':h<17?'Good afternoon':'Good evening'};
 const PLACE=()=>{const W=wxNow();
  const m=W?`${T(W.now)}° · ${W.txt||''} in ${W.name}`:new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
@@ -435,7 +439,7 @@ const appStyle=A=>`--a:${A.c||'#24272d'};--t:${A.t||'#fff'}`;
 const heroBtns=()=>[];const heroBtnsOld=()=>spot.t==='tvw'?[{id:'play',n:'Resume'},{id:'app',n:'Open '+tvwApp(item(spot))}]:spot.t==='up'?[{id:'play',n:'Play'},{id:'jf',n:'Open '+jfName()}]:spot.t==='cw'?[{id:'play',n:'Resume'},{id:'start',n:'Start over'},{id:'jf',n:'Open '+jfName()}]:spot.t==='new'?[{id:'play',n:'Play'},{id:'jf',n:'Open '+jfName()}]:(DEVICE&&jfState!=='loading'?[{id:'setup',n:'Set up Jellyfin'},{id:'jf',n:'Open '+jfName()}]:[{id:'jf',n:'Open '+jfName()}]);
 const QUICK=DEVICE?[{id:'gtvhome',n:'Google TV home'},{id:'gtv',n:'Google TV settings'},{id:'refresh',n:'Refresh'},{id:'photo',n:'Next background'}]
  :[{id:'gtvhome',n:'Google TV home'},{id:'sleep',n:'Sleep timer'},{id:'input',n:'Inputs'},{id:'photo',n:'Next background'},{id:'gtv',n:'Google TV settings'}];
-const rows=()=>[TOPEL.map((e,i)=>({k:'top',i})),heroBtns().map(b=>({k:'hb',b})),RECENT.map(a=>({k:'rec',a})),[...pinned.map(a=>({k:'pin',a})),{k:'all'}],
+const rows=()=>[TOPEL.map((e,i)=>({k:'top',i})),heroBtns().map(b=>({k:'hb',b})),RECENT.map(a=>({k:'rec',a})),[...pinned.map(a=>({k:'pin',a})),{k:'all'},{k:'org'}],
  [...CW.map((x,i)=>({k:'cw',i})),...TVW.map((x,i)=>({k:'tvw',i})),...UP.map((x,i)=>({k:'up',i}))],
  [...NEW.slice(0,2).map((x,i)=>({k:'new',i})),...(NEW.length>2?[{k:'more'}]:[])]];
 const LABELS=['','','Recently opened','Your apps','Continue watching<small>Jellyfin and your apps</small>','Recently added<small>new on Jellyfin</small>'];
@@ -454,6 +458,7 @@ function tile(it,k,i){
    `<span class="who${it.k==='new'?' nb':''}">${it.k==='new'?'New':esc(it.k==='tvw'?tvwApp(x):(x.u||''))}</span><div class="meta"><b>${esc(x.t)}</b><span>${esc(x.m)}</span></div>`+
    ((it.k==='cw'||it.k==='tvw')&&x.p?`<i class="bar"><i style="width:${Math.round(x.p*100)}%"></i></i>`:'')+`</div>`}
  if(it.k==='rec'||it.k==='pin'){const A=APPS[it.a]||{n:it.a};return `<div class="it app${it.k==='rec'?' sm':''}${A.ic&&!A.img?' hasic':''}${mode==='move'&&it.k==='pin'&&i===moving?' mv':''}" ${d} style="${appStyle(A)}">${appInner(A)}</div>`}
+ if(it.k==='org')return `<div class="it app all" ${d}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.5"/><circle cx="10" cy="17" r="2.5"/></svg><span>Organise</span></div>`;
  if(it.k==='all')return `<div class="it app all" ${d}><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>All apps</span></div>`;
  return `<div class="it q" ${d}>${esc(it.q.n)}</div>`;
 }
@@ -519,53 +524,57 @@ function wxNow(){
  return {name:L[0],now:L[1],ic:L[3],txt:L[2],days:off.map((o,i)=>({n:i?new Date(d.getTime()+i*864e5).toLocaleDateString('en-AU',{weekday:'short'}):'Today',ic:ic[i],hi:L[1]+o[0],lo:L[1]-8+o[1]}))};
 }
 const JFAPPS=['com.github.damontecres.wholphin','org.jellyfin.androidtv'];
-const SETS=()=>DEVICE?[
- {n:'Home button',v:(()=>{try{return Android.homeStatus()?'Working':'Not connected'}catch(e){return '?'}})(),act(){if(Android.homeStatus())toast('The Home button opens Family Home');else{Android.openAccessibility();toast('Turn on “Family Home button”. If it’s greyed out, run option 5 in the TV Tool.')}}},
- {n:'Jellyfin server',v:CFG.jellyfin&&CFG.jellyfin.url?CFG.jellyfin.url.replace(/^https?:\/\//,'')+(CFG.jellyfin.key?'':' (not signed in)'):'Find automatically',act(){mode='home';drawOv();jfSetup()}},
- {n:'Open shows with',v:jfName(),act(){const cands=JFAPPS.filter(p=>APPS[p]);if(cands.length<2){toast('Only '+jfName()+' is installed');return}const nx=cands[(cands.indexOf(jfPkg())+1)%cands.length];saveCfg(()=>{CFG.jellyfin=Object.assign({},CFG.jellyfin||{},{app:nx})});render()}},
- {n:'Weather location',v:(WX&&WX.name)||(CFG.weather&&CFG.weather.name)||'Sydney',act(){const cur=(CFG.weather&&CFG.weather.name)||'';
+function sortSec(L){return L.map((s,i)=>[s,i]).sort((a,b)=>(SECORD.indexOf(a[0].sec)-SECORD.indexOf(b[0].sec))||a[1]-b[1]).map(x=>x[0])}
+const SECORD=['Home screen','Jellyfin','Look','TV','About'];
+const SETS=()=>(DEVICE?sortSec:x=>x)(DEVICE?[
+ {sec:'TV',n:'Home button',v:(()=>{try{return Android.homeStatus()?'Working':'Not connected'}catch(e){return '?'}})(),act(){if(Android.homeStatus())toast('The Home button opens Family Home');else{Android.openAccessibility();toast('Turn on “Family Home button”. If it’s greyed out, run option 5 in the TV Tool.')}}},
+ {sec:'Jellyfin',n:'Jellyfin server',v:CFG.jellyfin&&CFG.jellyfin.url?CFG.jellyfin.url.replace(/^https?:\/\//,'')+(CFG.jellyfin.key?'':' (not signed in)'):'Find automatically',act(){mode='home';drawOv();jfSetup()}},
+ {sec:'Jellyfin',n:'Open shows with',v:jfName(),act(){const cands=JFAPPS.filter(p=>APPS[p]);if(cands.length<2){toast('Only '+jfName()+' is installed');return}const nx=cands[(cands.indexOf(jfPkg())+1)%cands.length];saveCfg(()=>{CFG.jellyfin=Object.assign({},CFG.jellyfin||{},{app:nx})});render()}},
+ {sec:'Home screen',n:'Weather location',v:(WX&&WX.name)||(CFG.weather&&CFG.weather.name)||'Sydney',act(){const cur=(CFG.weather&&CFG.weather.name)||'';
    openEntry('Weather location','Type your suburb or city, then choose Done.',TEXTK,cur.toLowerCase(),v=>{v=v.trim();if(!v)return;saveCfg(()=>{CFG.weather={name:v}});toast('Finding '+v+'…');loadWeather().then(ok=>toast(ok?'Weather for '+WX.name:'Couldn’t find '+v))})}},
- {n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
- {n:'Refresh Jellyfin',v:jfState==='ok'?CW.length+' in progress':'',act(){refreshJf(true)}},
- {n:'Next background',v:'',act(){nextPhoto()}},
- {n:'Wallpaper',v:WALLN[S.wall],act(){S.wall=(S.wall+1)%WALLN.length;save();photo=0;showPhoto(true);startPhotos()}},
- {n:'Moving lights',v:S.lights?'On':'Off',act(){S.lights^=1;save();applyLights()}},
- {n:'Change background every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
- {n:'Tile size',v:S.big?'Large':'Normal',act(){S.big^=1;save();applySize();render()}},
- {n:'Software update',v:UPD?'Update to '+UPD.tag:'v'+VER+' · check now',act(){if(UPD){Android.installUpdate(UPD.url)}else checkUpdate(true)}},
- {n:'Open Google TV home',v:'',act(){mode='home';drawOv();Android.googleHome()}},
- {n:'Google TV settings',v:'',act(){mode='home';drawOv();Android.settings()}},
- {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}},
+ {sec:'Home screen',n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
+ {sec:'Jellyfin',n:'Open as the person watching',v:S.jfuser?'On':'Off',act(){S.jfuser^=1;save();toast(S.jfuser?'Shows open in Wholphin as the family member who was watching':'Shows open as Wholphin’s current user')}},
+ {sec:'Jellyfin',n:'Refresh Jellyfin',v:jfState==='ok'?CW.length+' in progress':'',act(){refreshJf(true)}},
+ {sec:'Look',n:'Next background',v:'',act(){nextPhoto()}},
+ {sec:'Look',n:'Wallpaper',v:WALLN[S.wall],act(){S.wall=(S.wall+1)%WALLN.length;save();photo=0;showPhoto(true);startPhotos()}},
+ {sec:'Look',n:'Moving lights',v:S.lights?'On':'Off',act(){S.lights^=1;save();applyLights()}},
+ {sec:'Look',n:'Change background every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
+ {sec:'Look',n:'Tile size',v:S.big?'Large':'Normal',act(){S.big^=1;save();applySize();render()}},
+ {sec:'About',n:'Software update',v:UPD?'Update to '+UPD.tag:'v'+VER+' · check now',act(){if(UPD){Android.installUpdate(UPD.url)}else checkUpdate(true)}},
+ {sec:'TV',n:'Open Google TV home',v:'',act(){mode='home';drawOv();Android.googleHome()}},
+ {sec:'TV',n:'Google TV settings',v:'',act(){mode='home';drawOv();Android.settings()}},
+ {sec:'Home screen',n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}},
  ...(()=>{let I={};try{I=JSON.parse(Android.deviceInfo())}catch(e){}const gb=b=>(b/1073741824).toFixed(1)+' GB';
-  return [{n:'TV address',v:I.ip||'Not connected',act(){toast('Use '+(I.ip||'this')+' in the TV Tool')}},
-   {n:'Free storage',v:I.free?gb(I.free)+' of '+gb(I.total):'?',act(){}},
-   {n:'About',v:(I.model||'TV')+' · Android '+(I.android||'')+' · v'+VER,act(){}}]})()]:[
+  return [{sec:'About',n:'TV address',v:I.ip||'Not connected',act(){toast('Use '+(I.ip||'this')+' in the TV Tool')}},
+   {sec:'About',n:'Free storage',v:I.free?gb(I.free)+' of '+gb(I.total):'?',act(){}},
+   {sec:'About',n:'This TV',v:(I.model||'TV')+' · Android '+(I.android||'')+' · v'+VER,act(){}}]})()]:[
  {n:'Weather location',v:LOCS[S.loc][0],act(){S.loc=(S.loc+1)%LOCS.length;save();weather()}},
  {n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
  {n:'Jellyfin server',v:'192.168.1.50:8096',act(){toast('Connected · 6 in progress, 6 recently added')}},
  {n:'Change background every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
  {n:'Tile size',v:S.big?'Large':'Normal',act(){S.big^=1;save();applySize();render()}},
  {n:'Open Google TV home',v:'',act(){mode='gtv'}},
- {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}}];
+ {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}}]);
 function drawOv(){
  for(const k in OV)OV[k].classList.toggle('on',mode===k);
  if(mode==='menu')OV.menu.innerHTML=`<div class="panel"><h4>${esc(menu.t)}</h4>${menu.o.map((o,i)=>`<div class="opt${i===menu.i?' f':''}" data-mi="${i}">${esc(o)}</div>`).join('')}</div>`;
- if(mode==='all')OV.all.innerHTML=`<h4>All apps<small>Hold OK to add to or remove from home</small></h4><div class="grid">${ALL.map((a,i)=>{const A=APPS[a];return `<div class="it app${A.ic&&!A.img?' hasic':''}${i===ai?' f':''}" data-ai="${i}" style="${appStyle(A)}">${appInner(A)}${pinned.includes(a)?'<em>On home</em>':''}</div>`}).join('')}</div>`;
- if(mode==='all'||mode==='set'){const f=OV[mode].querySelector('.f');if(f)f.scrollIntoView({block:'nearest'})}
- if(mode==='set')OV.set.innerHTML=`<div class="side"><h4>Launcher settings</h4>${SETS().map((s,i)=>`<div class="opt${i===si?' f':''}" data-si="${i}"><span>${esc(s.n)}</span><b>${esc(s.v)}</b></div>`).join('')}<p>${DEVICE?'Press OK to change a setting.':'Press OK to change a setting. Example values; on the TV you set them once.'}</p></div>`;
+ if(mode==='all')OV.all.innerHTML=`<h4>${allPick?'Add apps to your home screen':'All apps'}<small>${allPick?'OK adds or removes an app · Back when finished':'Hold OK for options'}</small></h4><div class="grid">${ALL.map((a,i)=>{const A=APPS[a];return `<div class="it app${A.ic&&!A.img?' hasic':''}${i===ai?' f':''}" data-ai="${i}" style="${appStyle(A)}">${appInner(A)}${pinned.includes(a)?'<em>On home</em>':''}</div>`}).join('')}</div>`;
+ if(mode==='set')OV.set.innerHTML=`<div class="side"><h4>Settings</h4>${SETS().map((s,i,L)=>`${s.sec&&(!i||L[i-1].sec!==s.sec)?`<h5 class="sec">${esc(s.sec)}</h5>`:''}<div class="opt${i===si?' f':''}" data-si="${i}"><span>${esc(s.n)}</span><b>${esc(s.v)}</b></div>`).join('')}<p>${DEVICE?'Press OK to change a setting.':'Press OK to change a setting. Example values; on the TV you set them once.'}</p></div>`;
  if(mode==='search'){const res=results();if(sr>=res.length)sr=Math.max(0,res.length-1);if(!res.length)sz='k';
   OV.search.innerHTML=`<div><div class="sq">${q?esc(q):'<span>Search shows, movies and apps</span>'}<i class="caret"></i></div><div class="kb">${KEYS.map((k,i)=>`<div class="key${k.length>1?' w':''}${sz==='k'&&i===sk?' f':''}" data-sk="${i}">${k==='space'?'Space':k==='del'?'⌫ Delete':k==='clear'?'Clear':k}</div>`).join('')}</div></div>`+
   `<div class="sres"><h5>${q?'Results':'Suggestions'}</h5>${res.map((x,i)=>{const A=x.go==='app'?APPS[x.k]:null;
    const bg=A?(A.img?`background-image:url('${A.img}')`:`background:${A.c||'#24272d'}`):(x.x.th?`background-image:url('${esc(x.x.th)}'),${art(x.x)}`:`background-image:${art(x.x)}`);
    return `<div class="sr${sz==='r'&&i===sr?' f':''}" data-sr="${i}"><i style="${bg}"></i><div><b>${esc(x.t)}</b><span>${esc(x.sub)}</span></div></div>`}).join('')||'<p>Nothing matches. Try another word.</p>'}</div>`}
+ if(mode==='org')OV.org.innerHTML=`<h4>Organise your apps<small>OK on an app to move or remove it</small></h4><div class="grid">${pinned.map((a,i)=>{const A=APPS[a]||{n:a};return `<div class="it app${A.ic&&!A.img?' hasic':''}${i===ai?' f':''}" data-oi="${i}" style="${appStyle(A)}">${appInner(A)}<em>${i+1}</em></div>`}).join('')}<div class="it app all${ai===pinned.length?' f':''}" data-oi="${pinned.length}"><b style="font-size:2.4cqw;line-height:1">+</b><span>Add apps</span></div></div>`;
  if(mode==='lib')OV.lib.innerHTML=`<h4>Recently added<small>${NEW.length} on Jellyfin</small></h4><div class="grid lg">${NEW.map((x,i)=>`<div class="it cw${i===ai?' f':''}" data-li="${i}" style="--a:${x.c[0]};--b:${x.c[1]}">${x.th?`<img class="art" src="${esc(x.th)}" alt="" loading="lazy" onerror="this.remove()"><i class="sh"></i>`:''}<div class="meta"><b>${esc(x.t)}</b><span>${esc(x.m)}</span></div></div>`).join('')}</div>`;
  if(mode==='lib'){const f=OV.lib.querySelector('.f');if(f)f.scrollIntoView({block:'nearest'})}
  if(mode==='entry')OV.entry.innerHTML=`<div><h4>${esc(ent.t)}</h4><p class="ehint">${esc(ent.hint)}</p><div class="sq">${ent.val?esc(ent.val):'<span>Type with the keys below</span>'}<i class="caret"></i></div><div class="ekb">${ent.keys.map((k,i)=>`<div class="key${i===ent.i?' f':''}" data-ek="${i}">${k===' '?'Space':k==='del'?'⌫':k==='clear'?'Clear':k==='done'?'Done':esc(k)}</div>`).join('')}</div></div>`;
  if(mode==='qc')OV.qc.innerHTML=`<div class="qcp"><h4>Sign in to ${esc(qcS.name)}</h4><p>On your phone, open Jellyfin, go to your profile and choose <b>Quick Connect</b>. Type this code:</p><div class="qcode">${esc(qcS.code)}</div><p class="qs">${esc(qcS.status)}</p></div>`;
  if(mode==='fc'){const W=wxNow();OV.fc.innerHTML=W?`<div class="fcp"><h4>${esc(W.name)}<small>${T(W.now)}° now · ${esc(W.txt)}</small></h4><div class="days">${W.days.map(d=>`<div class="day"><span>${esc(d.n)}</span>${ICON[d.ic]||ICON.pc}<b>${T(d.hi)}°</b><em>${T(d.lo)}°</em></div>`).join('')}</div><p>${DEVICE?'Forecast from Open-Meteo. Press Back to close.':'Example forecast. On the TV this comes from Open-Meteo. Press Back to close.'}</p></div>`
   :`<div class="fcp"><h4>Weather</h4><p>Weather isn’t loaded yet. Check the TV’s internet connection.</p></div>`}
+ if(['all','set','org','lib'].includes(mode)){const f=OV[mode].querySelector('.f');if(f)f.scrollIntoView({block:'nearest'})}
 }
-function openMenu(t,o,cb){menu={t,o,i:0,cb};mode='menu';drawOv()}
+function openMenu(t,o,cb,back){menu={t,o,i:0,cb,back:back||'home'};mode='menu';drawOv()}
 const ADDRK=[...'1234567890abcdefghijklmnopqrstuvwxyz.:-','del','clear','done'];
 const TEXTK=[...'abcdefghijklmnopqrstuvwxyz',' ','-',"'",'del','clear','done'];
 function openEntry(t,hint,keys,val,done){ent={t,hint,keys,val:val||'',i:0,done};mode='entry';drawOv()}
@@ -675,8 +684,11 @@ function launchApp(el,a){
  launchFx(el,bg,A.n,'Opening…',A.img?'#fff':A.t,()=>{if(!Android.launch(a)){endLaunch();toast(A.n+' couldn’t be opened')}},A.img||A.ic);
 }
 function launchItem(el,x,verb){
+ const play=verb!=='Opening',pos=verb==='Resuming'?(x.pos||0):0;
+ const uid=S.jfuser&&x.uid?x.uid:'',sid=uid?JF_SID:'';
  launchFx(el,`background-image:${heroBg(x)};background-size:cover;background-position:center 28%`,x.t,verb+' in '+jfName()+(x.u?' · '+x.u:''),'#fff',
-  ()=>{if(!Android.openItem(jfPkg(),x.id||'')){endLaunch();toast(jfName()+' isn’t installed')}});
+  ()=>{let ok=false;try{ok=Android.openJellyfin(jfPkg(),x.id||'',play?'play':'view',pos,uid,sid)}catch(e){ok=Android.openItem(jfPkg(),x.id||'')}
+   if(!ok){endLaunch();toast(jfName()+' isn’t installed')}});
 }
 function launchAny(el,x,verb){
  if(x.intent||x.pkg&&!x.id){launchFx(el,`background-image:${heroBg(x)};background-size:cover;background-position:center 28%`,x.t,verb+' in '+tvwApp(x),'#fff',
@@ -695,6 +707,7 @@ function nav(dr,dc){
  if(mode==='menu'){if(dr)menu.i=(menu.i+dr+menu.o.length)%menu.o.length;drawOv();return}
  if(mode==='all'){const j=ai+dc+dr*6;if(j>=0&&j<ALL.length)ai=j;drawOv();return}
  if(mode==='lib'){const j=ai+dc+dr*4;if(j>=0&&j<NEW.length)ai=j;drawOv();return}
+ if(mode==='org'){const j=ai+dc+dr*6;if(j>=0&&j<=pinned.length)ai=j;drawOv();return}
  if(mode==='set'){if(dr)si=Math.min(SETS().length-1,Math.max(0,si+dr));drawOv();return}
  if(mode==='search'){const res=results();
   if(sz==='r'){if(dr)sr=Math.min(res.length-1,Math.max(0,sr+dr));if(dc<0)sz='k'}
@@ -724,12 +737,13 @@ function type(k){
 function openResult(i){
  const x=results()[i],el=OV.search.querySelector(`[data-sr="${i}"] i`);if(!x)return;
  mode='home';drawOv();
- if(x.go==='app')launchApp(el,x.k);else launchAny(el,x.x,x.go==='cw'||x.go==='tvw'?'Resuming':'Playing');
+ if(x.go==='app')launchApp(el,x.k);else launchAny(el,x.x,x.go==='cw'||x.go==='tvw'?'Resuming':x.go==='up'?'Playing':'Opening');
 }
 function ok(){
  if(mode==='menu'){const m=menu;mode='home';menu=null;drawOv();m.cb(m.o[m.i]);return}
- if(mode==='all'){launchApp(OV.all.querySelector(`[data-ai="${ai}"]`),ALL[ai]);return}
- if(mode==='lib'){const el=OV.lib.querySelector(`[data-li="${ai}"]`),x=NEW[ai];mode='home';drawOv();launchItem(el,x,'Playing');return}
+ if(mode==='all'){if(allPick){togglePin(ALL[ai]);return}launchApp(OV.all.querySelector(`[data-ai="${ai}"]`),ALL[ai]);return}
+ if(mode==='org'){orgOk();return}
+ if(mode==='lib'){const el=OV.lib.querySelector(`[data-li="${ai}"]`),x=NEW[ai];mode='home';drawOv();launchItem(el,x,'Opening');return}
  if(mode==='set'){SETS()[si].act();drawOv();return}
  if(mode==='search'){if(sz==='r')openResult(sr);else type(KEYS[sk]);return}
  if(mode==='entry'){entKey(ent.keys[ent.i]);return}
@@ -745,12 +759,13 @@ function ok(){
   else if(it.b.id==='start')launchItem(big,x,'Starting from the beginning');
   else launchApp(el,jfPkg())}
  else if(it.k==='cw')launchItem(el,CW[it.i],'Resuming');
- else if(it.k==='new')launchItem(el,NEW[it.i],'Playing');
+ else if(it.k==='new')launchItem(el,NEW[it.i],'Opening');
  else if(it.k==='up')launchItem(el,UP[it.i],'Playing');
  else if(it.k==='tvw')launchAny(el,TVW[it.i],'Resuming');
  else if(it.k==='more')openMore();
  else if(it.k==='rec'||it.k==='pin')launchApp(el,it.a);
- else if(it.k==='all'){mode='all';ai=0;drawOv()}
+ else if(it.k==='all'){allPick=false;mode='all';ai=0;drawOv()}
+ else if(it.k==='org'){mode='org';ai=0;drawOv()}
  else{const id=it.q.id;
   if(id==='gtvhome'){if(DEVICE)Android.googleHome();else{mode='gtv';drawOv()}}
   else if(id==='gtv'){if(DEVICE)Android.settings();else toast('Opening Google TV settings…')}
@@ -761,24 +776,43 @@ function ok(){
   else if(id==='photo')nextPhoto()}
 }
 function long(){
- if(mode==='all'){const a=ALL[ai],k=pinned.indexOf(a);
-  if(k>=0){pinned.splice(k,1);toast(APPS[a].n+' removed from home')}else{pinned.push(a);toast(APPS[a].n+' added to home')}
-  save();render();drawOv();return}
+ if(mode==='all'){if(allPick){togglePin(ALL[ai]);return}appMenu(ALL[ai],OV.all.querySelector(`[data-ai="${ai}"]`),'all');return}
+ if(mode==='org'){orgOk();return}
  if(mode!=='home'){ok();return}
  const it=R[r][c],el=elAt();
- if(it.k==='pin')openMenu(APPS[it.a].n,['Open','Move','Hide from home','Cancel'],v=>{
-  if(v==='Open')launchApp(el,it.a);
-  else if(v==='Move'){mode='move';moving=c;render();toast('◀ ▶ to move · OK to drop')}
-  else if(v==='Hide from home'){pinned.splice(c,1);save();render();toast('Hidden · find it in All apps')}});
+ if(it.k==='pin'||it.k==='rec')appMenu(it.a,el,null);
  else if(LISTS[it.k]){const x=LISTS[it.k]()[it.i];
   if(it.k==='tvw'){openMenu(x.t,['Resume','Open '+tvwApp(x),'Cancel'],v=>{if(v==='Resume')launchAny(el,x,'Resuming');else if(v!=='Cancel')launchApp(el,x.app)});return}
   openMenu(x.t,[it.k==='cw'?'Resume':'Play','Start over',...(x.id&&x.uid?['Mark as watched']:[]),'Open '+jfName(),'Cancel'],v=>{
    if(v==='Cancel')return;if(v==='Mark as watched'){markWatched(x);return}if(v.startsWith('Open '))launchApp(el,jfPkg());else launchItem(el,x,v==='Start over'?'Starting from the beginning':v==='Resume'?'Resuming':'Playing')})}
  else ok();
 }
+function togglePin(a){const k=pinned.indexOf(a);
+ if(k>=0){pinned.splice(k,1);toast(APPS[a].n+' removed from home')}else{pinned.push(a);toast(APPS[a].n+' added to home')}
+ save();render();drawOv()}
+function orgOk(){
+ if(ai>=pinned.length){allPick=true;mode='all';ai=0;drawOv();return}
+ const a=pinned[ai],n=APPS[a]?APPS[a].n:a;
+ openMenu(n,['Move left','Move right','Move to the start','Remove from home','Done'],v=>{
+  const i=pinned.indexOf(a);
+  if(v==='Move left'&&i>0){[pinned[i-1],pinned[i]]=[pinned[i],pinned[i-1]];ai=i-1}
+  else if(v==='Move right'&&i<pinned.length-1){[pinned[i+1],pinned[i]]=[pinned[i],pinned[i+1]];ai=i+1}
+  else if(v==='Move to the start'){pinned.splice(i,1);pinned.unshift(a);ai=0}
+  else if(v==='Remove from home'){pinned.splice(i,1);ai=Math.min(i,pinned.length);toast(n+' removed from home')}
+  save();render();mode='org';drawOv()},'org');
+}
+function appMenu(a,el,from){const n=APPS[a]?APPS[a].n:a,onHome=pinned.includes(a);
+ openMenu(n,['Open',onHome?'Remove from home':'Add to home',...(DEVICE?['App info (force stop, clear cache)','Uninstall']:[]),'Cancel'],v=>{
+  if(v==='Open')launchApp(el,a);
+  else if(v==='Remove from home'||v==='Add to home')togglePin(a);
+  else if(v.startsWith('App info'))Android.appInfo(a);
+  else if(v==='Uninstall')Android.uninstall(a);
+  if(from&&v!=='Open'&&!v.startsWith('App info')&&v!=='Uninstall'){mode=from;drawOv()}},from);
+}
 function openSearch(){mode='search';sz='k';sk=0;sr=0;drawOv()}
 function back(){
- if(mode==='menu'){mode='home';menu=null;drawOv()}
+ if(mode==='menu'){mode=menu.back||'home';menu=null;drawOv()}
+ else if(mode==='all'&&allPick){allPick=false;mode='org';ai=pinned.length;drawOv()}
  else if(mode==='qc'){if(qcS)qcS.stop=true;mode='home';drawOv()}
  else if(mode==='move')endMove();
  else if(mode!=='home'){mode='home';drawOv();render()}
@@ -827,6 +861,7 @@ tv.addEventListener('click',e=>{
  if(mode==='menu'&&(x=t.closest('[data-mi]'))){menu.i=+x.dataset.mi;ok();return}
  if(mode==='all'&&(x=t.closest('[data-ai]'))){ai=+x.dataset.ai;drawOv();ok();return}
  if(mode==='lib'&&(x=t.closest('[data-li]'))){ai=+x.dataset.li;ok();return}
+ if(mode==='org'&&(x=t.closest('[data-oi]'))){ai=+x.dataset.oi;ok();return}
  if(mode==='set'&&(x=t.closest('[data-si]'))){si=+x.dataset.si;ok();return}
  if(mode==='search'){if(x=t.closest('[data-sk]')){sz='k';sk=+x.dataset.sk;ok()}else if(x=t.closest('[data-sr]'))openResult(+x.dataset.sr);return}
  if(mode==='entry'&&(x=t.closest('[data-ek]'))){ent.i=+x.dataset.ek;ok();return}

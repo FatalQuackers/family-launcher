@@ -236,13 +236,62 @@ class MainActivity : Activity() {
             ui.post { openStockHome() }
         }
 
-        /** Opens the Jellyfin client. Jumping to the exact item depends on the client. */
-        @JavascriptInterface fun openItem(pkg: String, itemId: String): Boolean = launchPkg(pkg)
+        @JavascriptInterface fun openItem(pkg: String, itemId: String): Boolean =
+            openJellyfin(pkg, itemId, "view", 0L, "", "")
+
+        /** Opens a show or movie straight in Wholphin (or the official Jellyfin app). */
+        @JavascriptInterface fun openJellyfin(pkg: String, itemId: String, action: String, positionMs: Long,
+                                              userId: String, serverId: String): Boolean {
+            if (itemId.isEmpty()) return launchPkg(pkg)
+            val id = uuid(itemId)
+            val i = if (pkg == "com.github.damontecres.wholphin") {
+                val play = action == "play"
+                val uri = Uri.Builder().scheme("wholphin").authority(if (play) "play" else "view")
+                    .appendQueryParameter("itemId", id).apply {
+                        if (play && positionMs > 0) appendQueryParameter("position", positionMs.toString())
+                    }.build()
+                Intent(if (play) "com.github.damontecres.wholphin.PLAYBACK" else Intent.ACTION_VIEW, uri).apply {
+                    setPackage(pkg)
+                    putExtra("itemId", id)
+                    if (play) putExtra("position", maxOf(0L, positionMs))
+                    if (userId.isNotEmpty() && serverId.isNotEmpty()) {
+                        putExtra("userId", uuid(userId))
+                        putExtra("serverId", uuid(serverId))
+                    }
+                }
+            } else {
+                Intent(Intent.ACTION_VIEW, Uri.parse(itemId)).setPackage(pkg)
+            }
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            rememberRecent(pkg)
+            ui.post { if (!tryStart(i)) launchPkg(pkg) }
+            return true
+        }
+
+        @JavascriptInterface fun appInfo(pkg: String) {
+            ui.post {
+                tryStart(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        }
+
+        @JavascriptInterface fun uninstall(pkg: String) {
+            ui.post {
+                appsCache = null
+                tryStart(Intent(Intent.ACTION_DELETE, Uri.parse("package:$pkg")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        }
 
         @JavascriptInterface fun toast(msg: String) {
             ui.post { Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show() }
         }
     }
+
+    /** Jellyfin ids come without dashes; Wholphin expects normal UUIDs. */
+    private fun uuid(s: String): String =
+        if (s.length == 32 && s.all { it.isLetterOrDigit() })
+            "${s.substring(0, 8)}-${s.substring(8, 12)}-${s.substring(12, 16)}-${s.substring(16, 20)}-${s.substring(20)}"
+        else s
 
     // ---------- Apps ----------
     private fun appsJson(): String {
