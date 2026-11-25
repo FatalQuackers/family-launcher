@@ -22,6 +22,18 @@ h1{font-size:clamp(24px,3vw,34px);line-height:1.05;margin:0;font-weight:800;lett
 .wall{position:absolute;inset:0;transition:opacity 1.4s ease;animation:kb 40s ease-in-out infinite alternate}
 html.device .wall{animation:none}
 .wall svg{display:block;width:100%;height:100%}
+.lay{position:absolute;inset:0;overflow:hidden}
+.lay>svg{position:absolute;left:0;top:0;height:100%}
+.pan>svg{width:200%;animation:pan var(--t,40s) linear infinite;will-change:transform}
+@keyframes pan{to{transform:translateX(-50%)}}
+.tw{animation:tw var(--t,4s) ease-in-out infinite alternate;will-change:opacity}
+@keyframes tw{from{opacity:.25}to{opacity:1}}
+.glow{position:absolute;border-radius:50%;animation:glow 9s ease-in-out infinite alternate;will-change:transform}
+@keyframes glow{to{transform:scale(1.18)}}
+.shoot{position:absolute;left:18%;top:12%;width:16cqw;height:.18cqw;border-radius:1cqw;background:linear-gradient(90deg,transparent,#fff);transform:rotate(18deg);opacity:0;animation:shoot 13s ease-in infinite}
+@keyframes shoot{0%,88%{opacity:0;transform:rotate(18deg) translateX(0)}90%{opacity:1}100%{opacity:0;transform:rotate(18deg) translateX(30cqw)}}
+.aur{position:absolute;border-radius:50%;filter:none;will-change:transform;animation:aur var(--t,20s) ease-in-out infinite alternate}
+@keyframes aur{from{transform:translateX(-8cqw) rotate(var(--r,-8deg)) scaleY(.8)}to{transform:translateX(8cqw) rotate(var(--r,-8deg)) scaleY(1.25)}}
 @keyframes kb{from{transform:scale(1)}to{transform:scale(1.07)}}
 .lights{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 .tv{transition:--la 1.6s ease,--lb 1.6s ease}
@@ -45,6 +57,8 @@ html.device .wall{animation:none}
 .rt{display:flex;align-items:center;gap:1cqw}
 .chip{font-size:1cqw;font-weight:700;background:rgba(255,255,255,.14);padding:.3cqw .9cqw;border-radius:2cqw;white-space:nowrap}
 .chip[hidden]{display:none}
+#watch{background:rgba(255,255,255,.1);font-weight:600;max-width:30cqw;overflow:hidden;text-overflow:ellipsis}
+#watch::before{content:'';display:inline-block;width:.6cqw;height:.6cqw;border-radius:50%;background:#4ade80;margin-right:.5cqw;vertical-align:middle}
 .wifi{width:1.8cqw;height:1.8cqw;opacity:.7}
 .tb{height:3.6cqw;min-width:3.6cqw;border-radius:2cqw;display:flex;align-items:center;justify-content:center;gap:.6cqw;padding:0 .9cqw;background:rgba(255,255,255,.13);color:#fff;cursor:pointer;transition:transform .22s var(--ease),background .22s,color .22s}
 .tb svg{width:1.8cqw;height:1.8cqw;flex:none}.tb b{font-size:1.35cqw}.tb span{font-size:1cqw;opacity:.8;white-space:nowrap}
@@ -138,11 +152,7 @@ html.device .wall{animation:none}
 .gth{font-size:1.8cqw;font-weight:700;color:#e8eaed}
 .gtr{display:flex;gap:1.2cqw;margin-top:2cqw}.gtr i{flex:none;width:22cqw;aspect-ratio:16/9;border-radius:1cqw;background:#3c4043}.gtr.sm i{width:13cqw}
 .gtn{position:absolute;left:50%;bottom:3cqw;translate:-50% 0;background:#fff;color:#000;font-weight:700;font-size:1.2cqw;padding:.9cqw 2cqw;border-radius:3cqw;white-space:nowrap}
-.saver{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;justify-content:flex-end;padding:4cqw;background:linear-gradient(20deg,rgba(0,0,0,.55),transparent 50%);opacity:0;visibility:hidden;transition:opacity .9s,visibility 0s .9s}
-.saving .saver{opacity:1;visibility:visible;transition:opacity .9s}
-.saving .top,.saving .rows,.saving .hart{opacity:0!important}
-.saver .tm{font-size:7cqw;line-height:1}.saver .dt{font-size:1.6cqw;margin-top:.4cqw}.saver .cap{font-size:1.1cqw;margin-top:.3cqw}
-.launch{position:absolute;z-index:8;overflow:hidden;border-radius:.9cqw;color:var(--t,#fff);transition:left .55s cubic-bezier(.7,0,.2,1),top .55s cubic-bezier(.7,0,.2,1),width .55s cubic-bezier(.7,0,.2,1),height .55s cubic-bezier(.7,0,.2,1),border-radius .55s,opacity .45s}
+.saving .launch{position:absolute;z-index:8;overflow:hidden;border-radius:.9cqw;color:var(--t,#fff);transition:left .55s cubic-bezier(.7,0,.2,1),top .55s cubic-bezier(.7,0,.2,1),width .55s cubic-bezier(.7,0,.2,1),height .55s cubic-bezier(.7,0,.2,1),border-radius .55s,opacity .45s}
 .launch.go{left:0!important;top:0!important;width:100%!important;height:100%!important;border-radius:0}
 .launch.out{opacity:0}
 .lt{position:absolute;inset:0;display:grid;place-content:center;text-align:center;opacity:0;transform:translateY(1cqw);transition:opacity .35s .45s,transform .45s var(--ease) .45s}
@@ -194,6 +204,7 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
     <div class="top">
       <div class="clk"><span class="tm" id="tm"></span><span class="dt" id="dt"></span><span class="cap" id="cap"></span></div>
       <div class="rt">
+        <span class="chip" id="watch" hidden></span>
         <span class="chip" id="sleep" hidden></span>
         <svg class="wifi" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.3" r="1.2" fill="#fff" stroke="none"/></svg>
         <div class="tb" id="bSearch" data-r="0" data-c="0" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></div>
@@ -202,7 +213,6 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
       </div>
     </div>
     <div class="rows" id="rows"><div class="rin" id="rin"></div></div>
-    <div class="saver"><div class="tm" id="stm"></div><div class="dt" id="sdt"></div><div class="cap" id="scap"></div></div>
     <div class="ov" id="menu"></div>
     <div class="ov" id="all"></div>
     <div class="ov" id="set"></div>
@@ -237,8 +247,8 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
         <li>Move along <b>Continue watching</b> and <b>Recently added</b> and watch the Now playing banner change. Press OK to open it.</li>
         <li><b>Hold OK</b> on one of your apps to move or hide it. Hold OK on a show for Resume or Start over.</li>
         <li><b>Quick actions</b> has Google TV home, Sleep timer and Inputs.</li>
-        <li>The top bar has Search (or press <kbd>/</kbd>), a weather forecast and Settings, including tile size and the screensaver.</li>
-        <li>Leave it alone for a minute to see the photo screensaver. <kbd>Esc</kbd> is Back and <kbd>H</kbd> is Home.</li>
+        <li>The top bar shows who's watching what on Jellyfin elsewhere in the house, plus Search (or press <kbd>/</kbd>), the weather forecast and Settings.</li>
+        <li><kbd>Esc</kbd> is Back and <kbd>H</kbd> is Home. The backgrounds move on their own; Settings › Wallpaper switches them.</li>
       </ul>
       <p>The shows, people, weather and photos are made-up examples. On the TVs they'll come from your Jellyfin server, Open-Meteo and the photos folder. Your app layout and settings are saved in this browser.</p>
     </div>
@@ -284,7 +294,11 @@ const PREFERRED=['com.github.damontecres.wholphin','org.jellyfin.androidtv','com
  'com.amazon.amazonvideo.livingroom','au.net.abc.iview','com.sbs.ondemand.tv','au.com.stan.and','au.com.streamotion.ares.tv','com.swm.live',
  'au.com.ninenow.ctv','com.apple.atve.androidtv.appletv','com.spotify.tv.android','com.google.android.youtube.tvkids'];
 let APPS=DEVICE?{}:MOCK_APPS,ALL=Object.keys(APPS),DEF=DEVICE?[]:MOCK_DEF;
-let CW=DEVICE?[]:MOCK_CW,NEW=DEVICE?[]:MOCK_NEW,RECENT=DEVICE?[]:MOCK_RECENT;
+const MOCK_UP=[
+ {t:'Bluey',m:'Season 3 · Episode 13',u:'Mia',d:'Bingo and Bluey plan the perfect surprise for Dad.',c:['#2f5fc9','#8fc8ff']},
+ {t:'Severance',m:'Season 2 · Episode 5',u:'Dad',d:'The team digs deeper into what the floor is hiding.',c:['#1d2a3a','#9fb6cc']},
+ {t:'Planet Earth III',m:'Episode 4 · Deserts',u:'Jake',d:'Survival in the driest places on the planet.',c:['#7a4a1a','#f0b46a']}];
+let CW=DEVICE?[]:MOCK_CW,NEW=DEVICE?[]:MOCK_NEW,RECENT=DEVICE?[]:MOCK_RECENT,UP=DEVICE?[]:MOCK_UP,LIB=[],WATCH=[],JF_UID='';
 let CFG={},WX=null,PHOTOS=[],jfState=DEVICE?'none':'ok',lastJf=0,MODEL='',VER='',VCODE=0,UPD=null,ent=null,qcS=null;
 const NETCB={};let netId=0;
 window.__net=(id,code,body)=>{const f=NETCB[id];delete NETCB[id];if(f)f({code,body})};
@@ -320,7 +334,7 @@ function mapItem(it,u){
  else if(it.SeriesId)back=img(it.SeriesId,'Backdrop',1280);
  const th=ep?img(it.Id,'Primary',480):(it.ImageTags&&it.ImageTags.Thumb?img(it.Id,'Thumb',480):(back||img(it.Id,'Primary',480)));
  const ud=it.UserData||{},rt=it.RunTimeTicks||0,pos=ud.PlaybackPositionTicks||0,lm=rt&&pos?Math.max(1,Math.round((rt-pos)/6e8)):0;
- return {id:it.Id,t:ep?(it.SeriesName||it.Name):it.Name,
+ return {id:it.Id,uid:it.__uid||'',t:ep?(it.SeriesName||it.Name):it.Name,
   m:ep?`Season ${it.ParentIndexNumber??'?'} · Episode ${it.IndexNumber??'?'}`:[it.Type==='Series'?'Series':'Movie',it.ProductionYear,it.OfficialRating].filter(Boolean).join(' · '),
   d:(it.Overview||'').replace(/\s+/g,' ').slice(0,170),u,p:(ud.PlayedPercentage||0)/100,left:lm?fmtLeft(lm):'',c:colors(it.Id),img:back,th}}
 async function jget(path){
@@ -338,8 +352,15 @@ async function loadJellyfin(){
  const all=[];
  for(const u of live){
   const r=await jtry([`/UserItems/Resume?userId=${u.Id}&limit=8&fields=Overview&mediaTypes=Video`,`/Users/${u.Id}/Items/Resume?Limit=8&Fields=Overview&MediaTypes=Video`]);
-  ((r&&r.Items)||[]).forEach(it=>all.push({it,u:u.Name}));
+  ((r&&r.Items)||[]).forEach(it=>{it.__uid=u.Id;all.push({it,u:u.Name})});
  }
+ JF_UID=j.userId||(live[0]&&live[0].Id)||'';
+ const ups=[],cwIds=new Set(all.map(x=>x.it.Id));
+ for(const u of live){
+  const r=await jtry([`/Shows/NextUp?userId=${u.Id}&limit=6&fields=Overview`]);
+  ((r&&r.Items)||[]).forEach(it=>{if(!cwIds.has(it.Id)&&!ups.some(x=>x.id===it.Id)){it.__uid=u.Id;ups.push(mapItem(it,u.Name))}});
+ }
+ UP=ups.slice(0,10);
  all.sort((a,b)=>new Date((b.it.UserData||{}).LastPlayedDate||0)-new Date((a.it.UserData||{}).LastPlayedDate||0));
  const seen=new Set(),cw=[];
  for(const x of all){const k=x.it.Id+'|'+x.u;if(seen.has(k))continue;seen.add(k);cw.push(mapItem(x.it,x.u));if(cw.length>=12)break}
@@ -347,6 +368,7 @@ async function loadJellyfin(){
  if(u0){const lat=await jtry([`/Items/Latest?userId=${u0.Id}&limit=12&fields=Overview`,`/Users/${u0.Id}/Items/Latest?Limit=12&Fields=Overview`]);
   nw=(Array.isArray(lat)?lat:[]).map(it=>mapItem(it,null))}
  CW=cw;NEW=nw;jfState='ok';
+ loadWatching();
 }
 const WMAP=c=>c===0?['sun','Clear']:c===1?['sun','Mostly sunny']:c===2?['pc','Partly cloudy']:c===3?['cl','Cloudy']:c===45||c===48?['cl','Fog']:
  c>=51&&c<=57?['rain','Drizzle']:c>=61&&c<=67?['rain','Rain']:c>=71&&c<=77?['cl','Snow']:c>=80&&c<=82?['rain','Showers']:c>=85&&c<=86?['cl','Snow showers']:c>=95?['storm','Storms']:['pc',''];
@@ -366,7 +388,7 @@ async function loadWeather(){
 }
 
 /* ---------- Saved choices ---------- */
-const INTV=[15,30,60,300],INTVN=['15 sec','30 sec','1 min','5 min'],SAVER=[30,60,300,0],SAVERN=['30 sec','1 min','5 min','Off'];
+const INTV=[30,60,300,900],INTVN=['30 sec','1 min','5 min','15 min'],SAVER=[30,60,300,0],SAVERN=['30 sec','1 min','5 min','Off'];
 const S={loc:0,unit:0,intv:DEVICE?2:0,saver:1,big:0,lights:1,wall:0};
 const WALLN=['Photos (or built-in)','Built-in scenes','Jellyfin artwork'];
 const PINKEY=DEVICE?'fl_pin_tv':'fl_pin2';
@@ -383,19 +405,21 @@ function loadPinned(){
 /* ---------- State ---------- */
 let mode='home',r=1,c=0,last={},menu=null,ai=0,si=0,moving=-1,hold=null,R=[],spot={t:'cw',i:0},hf=0,htT,curY=0;
 let busy=null,saving=false,idleT,sleepEnd=0,sz='k',sk=0,sr=0,q='';
-const PLACE=()=>({t:'Family Home',m:jfState==='loading'?'Loading what everyone is watching…':jfState==='error'?'Couldn’t reach your Jellyfin server':'Jellyfin isn’t connected yet',
+const greet=()=>{const h=new Date().getHours();return h<5?'Good night':h<12?'Good morning':h<17?'Good afternoon':'Good evening'};
+const PLACE=()=>({place:1,t:greet(),m:jfState==='loading'?'Loading what everyone is watching…':jfState==='error'?'Couldn’t reach your Jellyfin server':'Jellyfin isn’t connected yet',
  d:jfState==='none'?'Choose Set up Jellyfin below. Family Home finds your server and you approve it on your phone.':jfState==='error'?'Check the server is switched on, then press Refresh in Quick actions.':'',c:['#1d2533','#5a6b8a']});
-const item=s=>s.t==='cw'?CW[s.i]:s.t==='new'?NEW[s.i]:PLACE();
-function fixSpot(){if(spot.t==='cw'&&CW[spot.i])return;if(spot.t==='new'&&NEW[spot.i])return;spot=CW.length?{t:'cw',i:0}:NEW.length?{t:'new',i:0}:{t:'none',i:0}}
+const LISTS={cw:()=>CW,up:()=>UP,new:()=>NEW};
+const item=s=>LISTS[s.t]?LISTS[s.t]()[s.i]:PLACE();
+function fixSpot(){if(LISTS[spot.t]&&LISTS[spot.t]()[spot.i])return;spot=CW.length?{t:'cw',i:0}:UP.length?{t:'up',i:0}:NEW.length?{t:'new',i:0}:{t:'none',i:0}}
 const art=x=>`radial-gradient(120% 100% at 80% 20%,${x.c[1]},${x.c[0]} 62%,#07080a 125%)`;
-const heroBg=x=>(x.img?`url("${x.img}"),`:'')+art(x);
+const heroBg=x=>x.img?`url("${x.img}"),${art(x)}`:(x.place?'none':art(x));
 const appBg=A=>`linear-gradient(160deg,rgba(255,255,255,.16),transparent 60%),${A.c}`;
 const appStyle=A=>`--a:${A.c||'#24272d'};--t:${A.t||'#fff'}`;
-const heroBtns=()=>spot.t==='cw'?[{id:'play',n:'Resume'},{id:'start',n:'Start over'},{id:'jf',n:'Open '+jfName()}]:spot.t==='new'?[{id:'play',n:'Play'},{id:'jf',n:'Open '+jfName()}]:(DEVICE&&jfState!=='loading'?[{id:'setup',n:'Set up Jellyfin'},{id:'jf',n:'Open '+jfName()}]:[{id:'jf',n:'Open '+jfName()}]);
-const QUICK=DEVICE?[{id:'gtvhome',n:'Google TV home'},{id:'gtv',n:'Google TV settings'},{id:'refresh',n:'Refresh'},{id:'photo',n:'Next photo'}]
- :[{id:'gtvhome',n:'Google TV home'},{id:'sleep',n:'Sleep timer'},{id:'input',n:'Inputs'},{id:'photo',n:'Next photo'},{id:'gtv',n:'Google TV settings'}];
-const rows=()=>[TOPEL.map((e,i)=>({k:'top',i})),heroBtns().map(b=>({k:'hb',b})),CW.map((x,i)=>({k:'cw',i})),NEW.map((x,i)=>({k:'new',i})),RECENT.map(a=>({k:'rec',a})),[...pinned.map(a=>({k:'pin',a})),{k:'all'}],QUICK.map(x=>({k:'q',q:x}))];
-const LABELS=['','','Continue watching<small>from Jellyfin · everyone</small>','Recently added<small>new on Jellyfin</small>','Recently opened','Your apps','Quick actions'];
+const heroBtns=()=>spot.t==='up'?[{id:'play',n:'Play'},{id:'jf',n:'Open '+jfName()}]:spot.t==='cw'?[{id:'play',n:'Resume'},{id:'start',n:'Start over'},{id:'jf',n:'Open '+jfName()}]:spot.t==='new'?[{id:'play',n:'Play'},{id:'jf',n:'Open '+jfName()}]:(DEVICE&&jfState!=='loading'?[{id:'setup',n:'Set up Jellyfin'},{id:'jf',n:'Open '+jfName()}]:[{id:'jf',n:'Open '+jfName()}]);
+const QUICK=DEVICE?[{id:'gtvhome',n:'Google TV home'},{id:'gtv',n:'Google TV settings'},{id:'refresh',n:'Refresh'},{id:'photo',n:'Next background'}]
+ :[{id:'gtvhome',n:'Google TV home'},{id:'sleep',n:'Sleep timer'},{id:'input',n:'Inputs'},{id:'photo',n:'Next background'},{id:'gtv',n:'Google TV settings'}];
+const rows=()=>[TOPEL.map((e,i)=>({k:'top',i})),heroBtns().map(b=>({k:'hb',b})),CW.map((x,i)=>({k:'cw',i})),UP.map((x,i)=>({k:'up',i})),NEW.map((x,i)=>({k:'new',i})),RECENT.map(a=>({k:'rec',a})),[...pinned.map(a=>({k:'pin',a})),{k:'all'}],QUICK.map(x=>({k:'q',q:x}))];
+const LABELS=['','','Continue watching<small>from Jellyfin · everyone</small>','Next up<small>the next episode for each show</small>','Recently added<small>new on Jellyfin</small>','Recently opened','Your apps','Quick actions'];
 
 function appInner(A){
  if(A.img)return `<img class="bn" src="${A.img}" alt="">`;
@@ -404,9 +428,9 @@ function appInner(A){
 }
 function tile(it,k,i){
  const d=`data-r="${k}" data-c="${i}"`;
- if(it.k==='cw'||it.k==='new'){const x=it.k==='cw'?CW[it.i]:NEW[it.i];
+ if(it.k==='cw'||it.k==='new'||it.k==='up'){const x=LISTS[it.k]()[it.i];
   return `<div class="it cw${it.k==='new'?' nw':''}" ${d} style="--a:${x.c[0]};--b:${x.c[1]}">${x.th?`<img class="art" src="${esc(x.th)}" alt="" loading="lazy" onerror="this.remove()"><i class="sh"></i>`:''}`+
-   `<span class="who${it.k==='new'?' nb':''}">${it.k==='new'?'New':esc(x.u)}</span><div class="meta"><b>${esc(x.t)}</b><span>${esc(x.m)}</span></div>`+
+   `<span class="who${it.k==='new'?' nb':''}">${it.k==='new'?'New':esc(x.u||'')}</span><div class="meta"><b>${esc(x.t)}</b><span>${esc(x.m)}</span></div>`+
    (it.k==='cw'?`<i class="bar"><i style="width:${Math.round(x.p*100)}%"></i></i>`:'')+`</div>`}
  if(it.k==='rec'||it.k==='pin'){const A=APPS[it.a]||{n:it.a};return `<div class="it app${it.k==='rec'?' sm':''}${A.ic&&!A.img?' hasic':''}${mode==='move'&&it.k==='pin'&&i===moving?' mv':''}" ${d} style="${appStyle(A)}">${appInner(A)}</div>`}
  if(it.k==='all')return `<div class="it app all" ${d}><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>All apps</span></div>`;
@@ -422,11 +446,11 @@ function render(){
 }
 function paintHero(anim){
  const it=item(spot),isCw=spot.t==='cw';
- tv.style.setProperty('--la',it.c[1]);tv.style.setProperty('--lb',it.c[0]);
+ if(!it.place){tv.style.setProperty('--la',it.c[1]);tv.style.setProperty('--lb',it.c[0])}
  const A=$('#ha'+hf),B=$('#ha'+(1-hf));
  if(anim){B.style.backgroundImage=heroBg(it);B.classList.add('on');A.classList.remove('on');hf=1-hf}
  else{A.style.backgroundImage=heroBg(it);A.classList.add('on');B.classList.remove('on')}
- const label=isCw?'Now playing · '+esc(it.u):spot.t==='new'?'New on Jellyfin':'Welcome home';
+ const label=isCw?'Now playing · '+esc(it.u):spot.t==='up'?'Next up · '+esc(it.u):spot.t==='new'?'New on Jellyfin':'Family Home';
  const html=`<span class="hl${isCw?' live':''}">${label}</span><h2>${esc(it.t)}</h2><p class="hm">${esc(it.m)}</p>${it.d?`<p class="hd">${esc(it.d)}</p>`:''}`+
   (isCw?`<div class="hpw"><div class="hp"><i style="width:${Math.round(it.p*100)}%"></i></div><span>${esc(it.left)}</span></div>`:'');
  const tx=$('#htx');clearTimeout(htT);
@@ -438,7 +462,7 @@ function elAt(){if(r===0)return TOPEL[c];if(r===1)return $('#hbtn').children[c];
 function focus(sm=true){
  TOPEL.forEach(e=>e.classList.remove('f'));rin.querySelectorAll('.f').forEach(e=>e.classList.remove('f'));
  const it=R[r]&&R[r][c];
- if(it&&(it.k==='cw'||it.k==='new')&&(spot.t!==it.k||spot.i!==it.i)){spot={t:it.k,i:it.i};paintHero(sm)}
+ if(it&&LISTS[it.k]&&(spot.t!==it.k||spot.i!==it.i)){spot={t:it.k,i:it.i};paintHero(sm)}
  const el=elAt();if(!el)return;el.classList.add('f');
  if(r>=2){const tin=el.parentElement,W=tin.parentElement.clientWidth,pad=W*.05;let L=+tin.dataset.x||0;
   if(el.offsetLeft+el.offsetWidth>L+W-pad)L=el.offsetLeft+el.offsetWidth-W+pad;
@@ -457,9 +481,12 @@ const KW={35:[0,0],36:[1,2],37:[3,4],38:[5,6]};
 const kpos=i=>i<35?{row:Math.floor(i/7),a:i%7,b:i%7}:{row:5,a:KW[i][0],b:KW[i][1]};
 const kat=(row,col)=>row<5?row*7+col:col===0?35:col<=2?36:col<=4?37:38;
 function results(){
- const lib=[...CW.map(x=>({t:x.t,sub:'Continue watching · '+x.u,x,go:'cw'})),...NEW.map(x=>({t:x.t,sub:'Recently added · Jellyfin',x,go:'new'})),...ALL.map(k=>({t:APPS[k].n,sub:'App',k,go:'app'}))];
+ const lib=[...CW.map(x=>({t:x.t,sub:'Continue watching · '+x.u,x,go:'cw'})),...UP.map(x=>({t:x.t,sub:'Next up · '+x.m,x,go:'up'})),...NEW.map(x=>({t:x.t,sub:'Recently added · Jellyfin',x,go:'new'})),...ALL.map(k=>({t:APPS[k].n,sub:'App',k,go:'app'}))];
  const s=q.trim().toLowerCase();
- return (s?lib.filter(x=>x.t.toLowerCase().includes(s)):lib.slice(0,6)).slice(0,6);
+ const hits=s?lib.filter(x=>x.t.toLowerCase().includes(s)):lib.slice(0,6);
+ const have=new Set(hits.map(x=>x.x&&x.x.id).filter(Boolean));
+ LIB.forEach(x=>{if(!have.has(x.id))hits.push({t:x.t,sub:'In your library · '+x.m,x,go:'lib'})});
+ return hits.slice(0,7);
 }
 const T=v=>S.unit?Math.round(v*9/5+32):v;
 function wxNow(){
@@ -477,18 +504,20 @@ const SETS=()=>DEVICE?[
  {n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
  {n:'Wallpaper',v:WALLN[S.wall],act(){S.wall=(S.wall+1)%WALLN.length;save();photo=0;showPhoto(true);startPhotos()}},
  {n:'Moving lights',v:S.lights?'On':'Off',act(){S.lights^=1;save();applyLights()}},
- {n:'Change photo every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
- {n:'Screensaver after',v:SAVERN[S.saver],act(){S.saver=(S.saver+1)%SAVER.length;save();poke()}},
+ {n:'Change background every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
  {n:'Tile size',v:S.big?'Large':'Normal',act(){S.big^=1;save();applySize();render()}},
  {n:'Software update',v:UPD?'Update to '+UPD.tag:'v'+VER+' · check now',act(){if(UPD){Android.installUpdate(UPD.url)}else checkUpdate(true)}},
  {n:'Open Google TV home',v:'',act(){mode='home';drawOv();Android.googleHome()}},
  {n:'Google TV settings',v:'',act(){mode='home';drawOv();Android.settings()}},
- {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}}]:[
+ {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}},
+ ...(()=>{let I={};try{I=JSON.parse(Android.deviceInfo())}catch(e){}const gb=b=>(b/1073741824).toFixed(1)+' GB';
+  return [{n:'TV address',v:I.ip||'Not connected',act(){toast('Use '+(I.ip||'this')+' in the TV Tool')}},
+   {n:'Free storage',v:I.free?gb(I.free)+' of '+gb(I.total):'?',act(){}},
+   {n:'About',v:(I.model||'TV')+' · Android '+(I.android||'')+' · v'+VER,act(){}}]})()]:[
  {n:'Weather location',v:LOCS[S.loc][0],act(){S.loc=(S.loc+1)%LOCS.length;save();weather()}},
  {n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
  {n:'Jellyfin server',v:'192.168.1.50:8096',act(){toast('Connected · 6 in progress, 6 recently added')}},
- {n:'Change photo every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
- {n:'Screensaver after',v:SAVERN[S.saver],act(){S.saver=(S.saver+1)%SAVER.length;save();poke()}},
+ {n:'Change background every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
  {n:'Tile size',v:S.big?'Large':'Normal',act(){S.big^=1;save();applySize();render()}},
  {n:'Open Google TV home',v:'',act(){mode='gtv'}},
  {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}}];
@@ -559,6 +588,35 @@ async function startQC(url,name){
  }
  if(!me.stop){me.status='The code expired. Press OK for a new one.';me.expired=true;drawOv()}
 }
+async function markWatched(x){
+ const base=CFG.jellyfin.url.replace(/\/+$/,''),h={Authorization:jfAuth(CFG.jellyfin.key)};
+ let r=await req('POST',`${base}/UserPlayedItems/${x.id}?userId=${x.uid}`,h,'');
+ if(r.code<200||r.code>299)r=await req('POST',`${base}/Users/${x.uid}/PlayedItems/${x.id}`,h,'');
+ if(r.code>=200&&r.code<300){toast(x.t+' marked as watched');refreshJf(false)}else toast('Couldn’t update Jellyfin');
+}
+async function loadWatching(){
+ if(!DEVICE){WATCH=[{u:'Dad',t:'Severance',dev:'iPad'}];showWatching();return}
+ if(jfState!=='ok')return;
+ const s=await jtry(['/Sessions?activeWithinSeconds=300']);
+ const me='familyhome-'+(MODEL||'tv').replace(/\W/g,'');
+ WATCH=(Array.isArray(s)?s:[]).filter(x=>x.NowPlayingItem&&x.DeviceId!==me).map(x=>({u:x.UserName||'Someone',t:x.NowPlayingItem.SeriesName||x.NowPlayingItem.Name,dev:x.DeviceName||''}));
+ showWatching();
+}
+function showWatching(){const ch=$('#watch');if(!WATCH.length){ch.hidden=true;return}
+ const w=WATCH[0];ch.hidden=false;ch.textContent=`${w.u} is watching ${w.t}${w.dev?' on '+w.dev:''}${WATCH.length>1?' +'+(WATCH.length-1):''}`}
+let libT;
+function searchLibrary(){
+ clearTimeout(libT);LIB=[];
+ if(!DEVICE||jfState!=='ok'||q.trim().length<2)return;
+ const term=q.trim();
+ libT=setTimeout(async()=>{
+  const uid=JF_UID,e=encodeURIComponent(term);
+  const r=await jtry([`/Items?userId=${uid}&searchTerm=${e}&includeItemTypes=Movie,Series&recursive=true&limit=8&fields=Overview`,`/Users/${uid}/Items?SearchTerm=${e}&IncludeItemTypes=Movie,Series&Recursive=true&Limit=8&Fields=Overview`]);
+  if(q.trim()!==term)return;
+  LIB=((r&&r.Items)||[]).map(it=>{it.__uid=uid;return mapItem(it,null)});
+  if(mode==='search')drawOv();
+ },450);
+}
 async function checkUpdate(say){
  if(!DEVICE){if(say)toast('Updates work on the TV');return}
  try{const r=await net('https://api.github.com/repos/FatalQuackers/family-launcher/releases/latest',{'User-Agent':'FamilyHome','Accept':'application/vnd.github+json'});
@@ -622,7 +680,7 @@ function nav(dr,dc){
 }
 function type(k){
  if(k==='space')q+=' ';else if(k==='del')q=q.slice(0,-1);else if(k==='clear')q='';else q+=k;
- q=q.slice(0,24);sr=0;drawOv();
+ q=q.slice(0,24);sr=0;searchLibrary();drawOv();
 }
 function openResult(i){
  const x=results()[i],el=OV.search.querySelector(`[data-sr="${i}"] i`);if(!x)return;
@@ -647,6 +705,7 @@ function ok(){
   else launchApp(el,jfPkg())}
  else if(it.k==='cw')launchItem(el,CW[it.i],'Resuming');
  else if(it.k==='new')launchItem(el,NEW[it.i],'Playing');
+ else if(it.k==='up')launchItem(el,UP[it.i],'Playing');
  else if(it.k==='rec'||it.k==='pin')launchApp(el,it.a);
  else if(it.k==='all'){mode='all';ai=0;drawOv()}
  else{const id=it.q.id;
@@ -668,9 +727,9 @@ function long(){
   if(v==='Open')launchApp(el,it.a);
   else if(v==='Move'){mode='move';moving=c;render();toast('◀ ▶ to move · OK to drop')}
   else if(v==='Hide from home'){pinned.splice(c,1);save();render();toast('Hidden · find it in All apps')}});
- else if(it.k==='cw'||it.k==='new'){const x=it.k==='cw'?CW[it.i]:NEW[it.i];
-  openMenu(x.t,[it.k==='cw'?'Resume':'Play','Start over','Open '+jfName(),'Cancel'],v=>{
-   if(v==='Cancel')return;if(v.startsWith('Open '))launchApp(el,jfPkg());else launchItem(el,x,v==='Start over'?'Starting from the beginning':v==='Resume'?'Resuming':'Playing')})}
+ else if(LISTS[it.k]){const x=LISTS[it.k]()[it.i];
+  openMenu(x.t,[it.k==='cw'?'Resume':'Play','Start over',...(x.id&&x.uid?['Mark as watched']:[]),'Open '+jfName(),'Cancel'],v=>{
+   if(v==='Cancel')return;if(v==='Mark as watched'){markWatched(x);return}if(v.startsWith('Open '))launchApp(el,jfPkg());else launchItem(el,x,v==='Start over'?'Starting from the beginning':v==='Resume'?'Resuming':'Playing')})}
  else ok();
 }
 function openSearch(){mode='search';sz='k';sk=0;sr=0;drawOv()}
@@ -683,9 +742,8 @@ function back(){
 }
 function goHome(){mode='home';menu=null;moving=-1;r=1;c=0;last={};spot={t:'cw',i:0};drawOv();render()}
 
-function startSaver(){if(mode!=='home'||busy)return;saving=true;tv.classList.add('saving')}
-function poke(){clearTimeout(idleT);const s=SAVER[S.saver];if(s)idleT=setTimeout(startSaver,s*1000)}
-function wake(){poke();if(saving){saving=false;tv.classList.remove('saving');return true}return false}
+function poke(){}
+function wake(){return false}
 function act(kind,a){
  if(wake())return;
  if(busy){if(kind==='back'||kind==='home')endLaunch();return}
@@ -732,6 +790,8 @@ tv.addEventListener('click',e=>{
 });
 /* Called by the Android app */
 window.onBack=()=>act('back');
+window.onOk=()=>act('ok');
+window.onLongOk=()=>act('long');
 window.onHome=()=>{endLaunch();wake();goHome()};
 window.onResume=()=>{
  endLaunch();if(!DEVICE)return;
@@ -750,38 +810,59 @@ function weather(){const W=wxNow();TOPEL[1].innerHTML=W?`${ICON[W.ic]||ICON.pc}<
 function applySize(){tv.style.setProperty('--k',S.big?1.18:1)}
 function tick(){
  const d=new Date(),tm=d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'}),dt=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
- $('#tm').textContent=tm;$('#dt').textContent=dt;$('#stm').textContent=tm;$('#sdt').textContent=dt;
+ $('#tm').textContent=tm;$('#dt').textContent=dt;
  const ch=$('#sleep');
  if(sleepEnd){const m=Math.ceil((sleepEnd-Date.now())/60000);if(m<=0){sleepEnd=0;ch.hidden=true;toast('Sleep timer finished · the TV would switch off now')}else{ch.hidden=false;ch.textContent=`Sleep · ${m} min`}}
  else ch.hidden=true;
 }
-const PH=[
- {cap:'Beach day',sky:['#6fa8d6','#f7d7a8','#ff9a66'],sun:[1080,560,70,'#fff1d0'],hills:[[540,30,.004,1,'#7d8fb0'],[575,18,.006,2,'#5d7196']],sea:[600,'#2d6b8e'],glint:'#ffe6c2'},
- {cap:'Blue Mountains trip',sky:['#1c2647','#6a6aa0','#f2a27a'],sun:[420,470,80,'#ffd2a1'],hills:[[430,60,.003,0,'#5a5b8c'],[520,70,.0035,2,'#3e3f6c'],[620,60,.004,4,'#28294b'],[740,50,.005,1,'#16172d']]},
- {cap:'Backyard, spring',sky:['#7dbbe6','#cfe9f6','#eef7fb'],sun:[1250,180,60,'#fffbe6'],hills:[[560,40,.003,1,'#8cb874'],[650,40,.004,3,'#679a54'],[760,30,.005,5,'#447a3b']]},
- {cap:'Harbour at night',sky:['#04060d','#111a38','#2a3463'],stars:1,sun:[1250,170,40,'#f4f1e4'],hills:[[600,25,.006,2,'#0e1531']],sea:[640,'#0a1028'],glint:'#ffcf7a'}];
-let gid=0;
+/* Built-in animated backgrounds, used when no photos are on the TV */
+const SKY=(id,stops)=>`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stops.map((c,i)=>`<stop offset="${i/(stops.length-1)}" stop-color="${c}"/>`).join('')}</linearGradient></defs><rect width="1600" height="900" fill="url(#${id})"/>`;
 function hill(y,a,f,ph,col){let d=`M0 900L0 ${y}`;for(let x=0;x<=1600;x+=40)d+=`L${x} ${(y+a*Math.sin(x*f+ph)+a*.35*Math.sin(x*f*2.7+ph*1.9)).toFixed(1)}`;return `<path d="${d}L1600 900Z" fill="${col}"/>`}
-function scene(p){
- if(p.url)return `<img src="${esc(p.url)}" alt="">`;
- const id='sk'+(gid++);
- let s=`<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${p.sky.map((col,i)=>`<stop offset="${i/(p.sky.length-1)}" stop-color="${col}"/>`).join('')}</linearGradient></defs><rect width="1600" height="900" fill="url(#${id})"/>`;
- if(p.stars)for(let i=0;i<90;i++)s+=`<circle cx="${(i*397)%1600}" cy="${(i*173)%440}" r="${1+(i%3)*.6}" fill="#fff" opacity="${(.3+(i%5)*.12).toFixed(2)}"/>`;
- s+=`<circle cx="${p.sun[0]}" cy="${p.sun[1]}" r="${p.sun[2]*1.8}" fill="${p.sun[3]}" opacity=".15"/><circle cx="${p.sun[0]}" cy="${p.sun[1]}" r="${p.sun[2]}" fill="${p.sun[3]}"/>`;
- p.hills.forEach(h=>s+=hill(...h));
- if(p.sea){s+=`<rect y="${p.sea[0]}" width="1600" height="${900-p.sea[0]}" fill="${p.sea[1]}"/>`;
-  for(let i=0;i<14;i++)s+=`<rect x="${p.sun[0]-130+(i*53)%260}" y="${p.sea[0]+18+i*17}" width="${30+(i*17)%70}" height="3" rx="1.5" fill="${p.glint}" opacity="${(.55-i*.03).toFixed(2)}"/>`}
- return s+'</svg>';
-}
-const walls=[$('#w0'),$('#w1')];let flip=0,photo=0,ptimer;
+function wave(y,a,k,col){let d=`M0 900L0 ${y}`;for(let x=0;x<=3200;x+=20)d+=`L${x} ${(y+a*Math.sin(x/1600*Math.PI*2*k)).toFixed(1)}`;return `<path d="${d}L3200 900Z" fill="${col}"/>`}
+function clouds(seed,n,y0,y1,col,op){let s=seed,out='';const rnd=()=>(s=s*16807%2147483647)/2147483647;const cl=[];
+ for(let i=0;i<n;i++)cl.push([rnd()*1600,y0+rnd()*(y1-y0),60+rnd()*120]);
+ for(const off of [0,1600])for(const [x,y,w] of cl)out+=`<g fill="${col}" opacity="${op}"><ellipse cx="${x+off}" cy="${y}" rx="${w}" ry="${w*.32}"/><ellipse cx="${x+off+w*.45}" cy="${y-w*.12}" rx="${w*.6}" ry="${w*.3}"/><ellipse cx="${x+off-w*.4}" cy="${y+w*.02}" rx="${w*.5}" ry="${w*.22}"/></g>`;
+ return out}
+function stars(seed,n,maxY){let s=seed,out='';const rnd=()=>(s=s*16807%2147483647)/2147483647;for(let i=0;i<n;i++)out+=`<circle cx="${(rnd()*1600).toFixed(0)}" cy="${(rnd()*maxY).toFixed(0)}" r="${(0.8+rnd()*1.6).toFixed(1)}" fill="#fff"/>`;return out}
+const VB='viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice"',VB2='viewBox="0 0 3200 900" preserveAspectRatio="none"';
+let sid=0;
+const PH=[
+ {cap:'Dusk waves',html:()=>{const id='s'+(sid++);return `<svg ${VB}>${SKY(id,['#5d93c8','#f4cfa0','#ff8f5e'])}${hill(560,26,.004,1,'#7d8fb0')}</svg>
+  <div class="glow" style="left:63%;top:52%;width:12cqw;height:12cqw;margin:-6cqw;background:radial-gradient(closest-side,#fff3d6,rgba(255,220,170,.4) 45%,transparent)"></div>
+  <div class="lay pan" style="--t:46s"><svg ${VB2}>${wave(610,8,4,'#4a86aa')}</svg></div>
+  <div class="lay pan" style="--t:30s"><svg ${VB2}>${wave(655,11,3,'#2f6d90')}</svg></div>
+  <div class="lay pan" style="--t:20s"><svg ${VB2}>${wave(710,15,2,'#1f5878')}</svg></div>`}},
+ {cap:'Mountain morning',html:()=>{const id='s'+(sid++);return `<svg ${VB}>${SKY(id,['#1c2647','#6a6aa0','#f2a27a'])}</svg>
+  <div class="glow" style="left:26%;top:50%;width:16cqw;height:16cqw;margin:-8cqw;background:radial-gradient(closest-side,#ffd9ab,rgba(255,190,150,.35) 45%,transparent)"></div>
+  <div class="lay pan" style="--t:150s"><svg ${VB2}>${clouds(7,7,120,330,'#ffd8c8',.28)}</svg></div>
+  <div class="lay"><svg ${VB}>${hill(430,60,.003,0,'#5a5b8c')}${hill(520,70,.0035,2,'#3e3f6c')}${hill(620,60,.004,4,'#28294b')}${hill(740,50,.005,1,'#16172d')}</svg></div>
+  <div class="lay pan" style="--t:90s"><svg ${VB2}>${clouds(3,6,600,700,'#fff',.07)}</svg></div>`}},
+ {cap:'Starry night',html:()=>{const id='s'+(sid++);return `<svg ${VB}>${SKY(id,['#04060d','#101a3a','#283466'])}<circle cx="1250" cy="170" r="70" fill="#f4f1e4" opacity=".12"/><circle cx="1250" cy="170" r="40" fill="#f4f1e4"/></svg>
+  <div class="lay tw" style="--t:3.2s"><svg ${VB}>${stars(11,45,480)}</svg></div>
+  <div class="lay tw" style="--t:5s"><svg ${VB}>${stars(29,45,480)}</svg></div>
+  <div class="lay tw" style="--t:7.5s"><svg ${VB}>${stars(53,35,480)}</svg></div>
+  <div class="shoot"></div>
+  <div class="lay"><svg ${VB}>${hill(640,30,.005,2,'#0e1531')}${hill(720,24,.007,4,'#080c1e')}</svg></div>`}},
+ {cap:'Aurora',html:()=>{const id='s'+(sid++);return `<svg ${VB}>${SKY(id,['#020611','#06182a','#0b2a3a'])}${stars(71,90,500)}</svg>
+  <div class="aur" style="--t:19s;--r:-9deg;left:-10cqw;top:2cqw;width:100cqw;height:22cqw;background:radial-gradient(closest-side,rgba(70,255,170,.55),transparent)"></div>
+  <div class="aur" style="--t:27s;--r:-4deg;left:10cqw;top:8cqw;width:90cqw;height:16cqw;background:radial-gradient(closest-side,rgba(40,200,255,.45),transparent)"></div>
+  <div class="aur" style="--t:23s;--r:-13deg;left:30cqw;top:0;width:70cqw;height:14cqw;background:radial-gradient(closest-side,rgba(170,100,255,.35),transparent)"></div>
+  <div class="lay"><svg ${VB}>${hill(650,40,.004,1,'#06101c')}${hill(740,26,.006,3,'#03070f')}</svg></div>`}},
+ {cap:'Spring meadow',html:()=>{const id='s'+(sid++);return `<svg ${VB}>${SKY(id,['#6fb2e3','#cbe8f6','#eef7fb'])}</svg>
+  <div class="glow" style="left:78%;top:20%;width:12cqw;height:12cqw;margin:-6cqw;background:radial-gradient(closest-side,#fffbe6,rgba(255,250,220,.4) 45%,transparent)"></div>
+  <div class="lay pan" style="--t:160s"><svg ${VB2}>${clouds(5,6,90,260,'#fff',.85)}</svg></div>
+  <div class="lay pan" style="--t:100s"><svg ${VB2}>${clouds(17,4,200,330,'#fff',.6)}</svg></div>
+  <div class="lay"><svg ${VB}>${hill(560,40,.003,1,'#8cb874')}${hill(650,40,.004,3,'#679a54')}${hill(760,30,.005,5,'#447a3b')}</svg></div>`}}];
+function scene(p){return p.url?`<img src="${esc(p.url)}" alt="">`:p.html()}
+const walls=[$('#w0'),$('#w1')];let flip=0,photo=0,ptimer,wallT;
 function jfArt(){const seen=new Set();return [...CW,...NEW].filter(x=>x.img&&!seen.has(x.img)&&seen.add(x.img)).map(x=>({url:x.img,cap:x.t}))}
 const plist=()=>{if(S.wall===1)return PH;if(S.wall===2){const a=jfArt();if(a.length)return a}return PHOTOS.length?PHOTOS:PH};
 function applyLights(){tv.classList.toggle('nolights',!S.lights)}
 function showPhoto(first){
  const L=plist();photo%=L.length;const p=L[photo];
  if(first){walls[0].innerHTML=scene(p);walls[0].style.opacity=1;walls[1].style.opacity=0;flip=0}
- else{const a=walls[flip],b=walls[1-flip];b.innerHTML=scene(p);b.style.opacity=1;a.style.opacity=0;flip=1-flip}
- $('#cap').textContent='· '+p.cap;$('#scap').textContent=p.cap;
+ else{const a=walls[flip],b=walls[1-flip];b.innerHTML=scene(p);b.style.opacity=1;a.style.opacity=0;flip=1-flip;clearTimeout(wallT);wallT=setTimeout(()=>{a.innerHTML=''},1600)}
+ $('#cap').textContent='· '+p.cap;
 }
 function nextPhoto(){photo=(photo+1)%plist().length;showPhoto()}
 function startPhotos(){clearInterval(ptimer);ptimer=setInterval(nextPhoto,INTV[S.intv]*1000)}
@@ -793,6 +874,9 @@ if(DEVICE){
  try{WX=JSON.parse(localStorage.getItem('fl_wx'))}catch(e){}
 }
 loadPinned();applySize();applyLights();showPhoto(true);startPhotos();weather();tick();setInterval(tick,5000);render();poke();
+function netState(){const off=!navigator.onLine;document.querySelector('.wifi').style.opacity=off?'.25':'.7';if(off)toast('No internet connection')}
+addEventListener('online',netState);addEventListener('offline',netState);
+setInterval(()=>{if(mode==='home'&&!busy)loadWatching()},60000);loadWatching();
 if(DEVICE){refreshJf(false);loadWeather();setInterval(loadWeather,30*60000);
  setTimeout(()=>{try{if(!Android.homeStatus())toast('The Home button isn’t connected yet · Settings › Home button')}catch(e){}},4000);
  setTimeout(()=>checkUpdate(false),20000);setInterval(()=>checkUpdate(false),12*3600000);setInterval(()=>{if(mode==='home'&&!busy&&!saving)refreshJf(false)},5*60000)}

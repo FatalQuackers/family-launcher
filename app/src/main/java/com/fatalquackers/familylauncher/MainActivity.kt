@@ -20,6 +20,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Base64
+import android.view.KeyEvent
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -101,6 +102,30 @@ class MainActivity : Activity() {
         js("window.onResume&&onResume()")
     }
 
+    // The TV's browser engine only reports OK when it's released, so "hold OK"
+    // is detected here and passed to the page.
+    private var okLong = false
+    private val longOk = Runnable { okLong = true; js("window.onLongOk&&onLongOk()") }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val k = event.keyCode
+        if (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER ||
+            k == KeyEvent.KEYCODE_NUMPAD_ENTER || k == KeyEvent.KEYCODE_BUTTON_A) {
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                if (event.repeatCount == 0) {
+                    okLong = false
+                    ui.removeCallbacks(longOk)
+                    ui.postDelayed(longOk, 550)
+                }
+            } else if (event.action == KeyEvent.ACTION_UP) {
+                ui.removeCallbacks(longOk)
+                if (!okLong) js("window.onOk&&onOk()")
+            }
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         // A home screen never closes; the page decides what Back does.
@@ -167,6 +192,24 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface fun installUpdate(url: String) = downloadAndInstall(url)
+
+        @JavascriptInterface fun deviceInfo(): String {
+            val o = JSONObject()
+            try {
+                val st = android.os.StatFs(android.os.Environment.getDataDirectory().path)
+                o.put("free", st.availableBytes)
+                o.put("total", st.totalBytes)
+            } catch (_: Exception) { }
+            try {
+                val ip = java.net.NetworkInterface.getNetworkInterfaces().toList()
+                    .flatMap { it.inetAddresses.toList() }
+                    .firstOrNull { !it.isLoopbackAddress && it is java.net.Inet4Address }
+                o.put("ip", ip?.hostAddress ?: "")
+            } catch (_: Exception) { }
+            o.put("model", Build.MODEL ?: "")
+            o.put("android", Build.VERSION.RELEASE ?: "")
+            return o.toString()
+        }
 
         @JavascriptInterface fun settings() {
             ui.post { tryStart(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
