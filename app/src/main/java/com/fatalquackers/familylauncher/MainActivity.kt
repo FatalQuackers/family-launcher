@@ -193,6 +193,20 @@ class MainActivity : Activity() {
 
         @JavascriptInterface fun installUpdate(url: String) = downloadAndInstall(url)
 
+        /** Android TV's shared "Watch next" list (other apps' continue watching). */
+        @JavascriptInterface fun watchNext(): String = watchNextJson()
+
+        @JavascriptInterface fun openIntent(uri: String, pkg: String): Boolean {
+            val i = try { Intent.parseUri(uri, Intent.URI_INTENT_SCHEME) } catch (e: Exception) { null }
+            if (i != null) {
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                rememberRecent(pkg)
+                ui.post { if (!tryStart(i)) launchPkg(pkg) }
+                return true
+            }
+            return launchPkg(pkg)
+        }
+
         @JavascriptInterface fun deviceInfo(): String {
             val o = JSONObject()
             try {
@@ -317,6 +331,50 @@ class MainActivity : Activity() {
             } catch (e: Exception) { }
         }
         return JSONArray(out.take(maxOf(1, max) * 3)).toString()
+    }
+
+    // ---------- Watch next (other apps) ----------
+    private fun watchNextJson(): String {
+        val arr = JSONArray()
+        try {
+            contentResolver.query(Uri.parse("content://android.media.tv/watch_next_program"),
+                null, null, null, "last_engagement_time_utc_millis DESC")?.use { c ->
+                fun str(col: String): String { val i = c.getColumnIndex(col); return if (i >= 0) (c.getString(i) ?: "") else "" }
+                fun num(col: String): Long { val i = c.getColumnIndex(col); return if (i >= 0) c.getLong(i) else 0L }
+                while (c.moveToNext() && arr.length() < 15) {
+                    val pkg = str("package_name")
+                    if (pkg == packageName) continue
+                    if (str("browsable") == "0") continue
+                    val o = JSONObject()
+                    o.put("pkg", pkg)
+                    o.put("title", str("title"))
+                    o.put("episode", str("episode_title"))
+                    o.put("season", str("season_display_number"))
+                    o.put("ep", str("episode_display_number"))
+                    o.put("desc", str("short_description"))
+                    o.put("intent", str("intent_uri"))
+                    o.put("dur", num("duration_millis"))
+                    o.put("pos", num("last_playback_position_millis"))
+                    o.put("type", num("watch_next_type"))
+                    o.put("art", artUrl(str("poster_art_uri").ifEmpty { str("thumbnail_uri") }))
+                    arr.put(o)
+                }
+            }
+        } catch (e: Exception) {
+            return JSONObject().put("error", e.javaClass.simpleName + ": " + (e.message ?: "")).toString()
+        }
+        return arr.toString()
+    }
+
+    /** Web pictures pass straight through; pictures stored on the TV become data URLs. */
+    private fun artUrl(u: String): String {
+        if (u.isEmpty() || u.startsWith("http")) return u
+        return try {
+            contentResolver.openInputStream(Uri.parse(u))?.use { inp ->
+                val bytes = inp.readBytes()
+                if (bytes.size > 400_000) "" else "data:image/*;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+            } ?: ""
+        } catch (e: Exception) { "" }
     }
 
     // ---------- Photos ----------
