@@ -249,7 +249,7 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
       <ul>
         <li>Move with the <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> arrow keys or the remote. <kbd>Enter</kbd> is OK.</li>
         <li>Move along <b>Continue watching</b> and <b>Recently added</b> and watch the Now playing banner change. Press OK to open it.</li>
-        <li><b>Hold OK</b> on one of your apps to move or hide it. Hold OK on a show for Resume or Start over.</li>
+        <li><b>Hold OK</b> on an app for Open, Stop, App settings, Remove from home and Uninstall. Hold OK on a show for Resume or Start over. <b>Organise</b> at the end of Your apps moves apps around.</li>
         <li><b>Quick actions</b> has Google TV home, Sleep timer and Inputs.</li>
         <li>The top bar shows who's watching what on Jellyfin elsewhere in the house, plus Search (or press <kbd>/</kbd>), the weather forecast and Settings.</li>
         <li><kbd>Esc</kbd> is Back and <kbd>H</kbd> is Home. The backgrounds move on their own; Settings › Wallpaper switches them.</li>
@@ -802,12 +802,13 @@ function orgOk(){
   save();render();mode='org';drawOv()},'org');
 }
 function appMenu(a,el,from){const n=APPS[a]?APPS[a].n:a,onHome=pinned.includes(a);
- openMenu(n,['Open',onHome?'Remove from home':'Add to home',...(DEVICE?['App info (force stop, clear cache)','Uninstall']:[]),'Cancel'],v=>{
+ openMenu(n,['Open','Stop','App settings',onHome?'Remove from home':'Add to home','Uninstall','Cancel'],v=>{
   if(v==='Open')launchApp(el,a);
+  else if(v==='Stop'){let ok=true;try{ok=Android.stopApp(a)}catch(e){}toast(ok?n+' stopped':'Couldn’t stop '+n)}
+  else if(v==='App settings'){if(DEVICE)Android.appInfo(a);else toast('Opens '+n+'’s settings on the TV (storage, clear cache, force stop)')}
   else if(v==='Remove from home'||v==='Add to home')togglePin(a);
-  else if(v.startsWith('App info'))Android.appInfo(a);
-  else if(v==='Uninstall')Android.uninstall(a);
-  if(from&&v!=='Open'&&!v.startsWith('App info')&&v!=='Uninstall'){mode=from;drawOv()}},from);
+  else if(v==='Uninstall'){if(DEVICE)Android.uninstall(a);else toast('Asks to uninstall '+n+' on the TV')}
+  if(from&&!['Open','App settings','Uninstall'].includes(v)){mode=from;drawOv()}},from);
 }
 function openSearch(){mode='search';sz='k';sk=0;sr=0;drawOv()}
 function back(){

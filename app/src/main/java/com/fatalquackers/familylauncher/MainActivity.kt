@@ -275,6 +275,13 @@ class MainActivity : Activity() {
             }
         }
 
+        /** Stops an app that's running in the background (Android doesn't let other apps force-stop). */
+        @JavascriptInterface fun stopApp(pkg: String): Boolean = try {
+            val am = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            am.killBackgroundProcesses(pkg)
+            true
+        } catch (e: Exception) { false }
+
         @JavascriptInterface fun uninstall(pkg: String) {
             ui.post {
                 appsCache = null
