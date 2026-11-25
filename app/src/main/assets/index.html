@@ -405,11 +405,11 @@ async function loadWeather(){
 /* ---------- Saved choices ---------- */
 const INTV=[30,60,300,900],INTVN=['30 sec','1 min','5 min','15 min'],SAVER=[30,60,300,0],SAVERN=['30 sec','1 min','5 min','Off'];
 const S={loc:0,unit:0,intv:DEVICE?2:0,saver:1,big:0,lights:1,wall:0,jfuser:1};
-const WALLN=['Photos (or built-in)','Built-in scenes','Jellyfin artwork'];
+const WALLN=['Automatic','Built-in scenes','Jellyfin artwork','Chromecast photos','My photos'];
 const PINKEY=DEVICE?'fl_pin_tv':'fl_pin2';
 let pinned=null;
 try{const s=JSON.parse(localStorage.getItem(DEVICE?'fl_set_tv':'fl_set2'));if(s&&typeof s==='object')for(const k in S)if(Number.isInteger(s[k]))S[k]=s[k]}catch(e){}
-if(S.loc>=LOCS.length)S.loc=0;if(S.wall>2)S.wall=0;if(S.intv>=INTV.length)S.intv=0;if(S.saver>=SAVER.length)S.saver=1;
+if(S.loc>=LOCS.length)S.loc=0;if(S.wall>4)S.wall=0;if(S.intv>=INTV.length)S.intv=0;if(S.saver>=SAVER.length)S.saver=1;
 const save=()=>{try{localStorage.setItem(PINKEY,JSON.stringify(pinned));localStorage.setItem(DEVICE?'fl_set_tv':'fl_set2',JSON.stringify(S))}catch(e){}};
 function loadPinned(){
  let p=null;try{p=JSON.parse(localStorage.getItem(PINKEY))}catch(e){}
@@ -928,10 +928,30 @@ const PH=[
   <div class="aur" style="--t:27s;--r:-5deg;left:14cqw;top:8cqw;width:84cqw;height:16cqw;background:radial-gradient(closest-side,rgba(40,200,255,.4),transparent)"></div>`}},
  {cap:'Spring meadow',html:()=>{const id='s'+(sid++);return `<svg ${VB}>${SKY(id,['#6fb2e3','#cbe8f6','#eef7fb'])}<circle cx="1250" cy="180" r="60" fill="#fffbe6"/><circle cx="1250" cy="180" r="110" fill="#fffbe6" opacity=".25"/>${hill(560,40,.003,1,'#8cb874')}${hill(650,40,.004,3,'#679a54')}${hill(760,30,.005,5,'#447a3b')}</svg>
   ${band(60,360,'140s',clouds(5,6,90,260,'#fff',.85)+clouds(17,4,200,330,'#fff',.55))}`}}];
-function scene(p){return p.url?`<img src="${esc(p.url)}" alt="">`:p.html()}
+let badRun=0;
+function scene(p){return p.url?`<img src="${esc(p.url)}" alt="" onload="window.__wallOk&&__wallOk()" onerror="window.__wallBad&&__wallBad(this.src)">`:p.html()}
+window.__wallOk=()=>{badRun=0};
+window.__wallBad=src=>{CC=CC.filter(x=>x.url!==src);if(++badRun<6)nextPhoto();else{badRun=0;CC=[];showPhoto(true)}};
 const walls=[$('#w0'),$('#w1')];let flip=0,photo=0,ptimer,wallT;
 function jfArt(){const seen=new Set();return [...CW,...NEW].filter(x=>x.img&&!seen.has(x.img)&&seen.add(x.img)).map(x=>({url:x.img,cap:x.t}))}
-const plist=()=>{if(S.wall===1)return PH;if(S.wall===2){const a=jfArt();if(a.length)return a}return PHOTOS.length?PHOTOS:PH};
+let CC=[];
+function loadCC(){
+ if(!DEVICE)return;
+ try{const c=JSON.parse(localStorage.getItem('fl_cc')||'null');if(Array.isArray(c)&&c.length){CC=c;return}}catch(e){}
+ net('https://raw.githubusercontent.com/dconnolly/chromecast-backgrounds/master/README.md').then(r=>{
+  const urls=[...new Set((r.body||'').match(/https:\/\/lh\d\.googleusercontent\.com\/[^)\s"]+/g)||[])];
+  for(let i=urls.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[urls[i],urls[j]]=[urls[j],urls[i]]}
+  CC=urls.slice(0,120).map(u=>({url:u,cap:decodeURIComponent(u.split('/').pop()).replace(/\+/g,' ').replace(/\.[a-z]+$/i,'').replace(/^(IMG|DSC|img|dsc)[_ -]?\d+.*$/,'Chromecast photo')}));
+  try{localStorage.setItem('fl_cc',JSON.stringify(CC))}catch(e){}
+  if(S.wall===0&&!PHOTOS.length||S.wall===3){photo=0;showPhoto(true)}
+ });
+}
+const plist=()=>{
+ if(S.wall===1)return PH;
+ if(S.wall===2){const a=jfArt();if(a.length)return a}
+ if(S.wall===3&&CC.length)return CC;
+ if(S.wall===4&&PHOTOS.length)return PHOTOS;
+ return PHOTOS.length?PHOTOS:CC.length?CC:PH};
 function applyLights(){tv.classList.toggle('nolights',!S.lights)}
 function showPhoto(first){
  const L=plist();photo%=L.length;const p=L[photo];
@@ -945,7 +965,7 @@ function startPhotos(){clearInterval(ptimer);ptimer=setInterval(nextPhoto,INTV[S
 /* ---------- Start ---------- */
 if(DEVICE){
  try{MODEL=Android.model();VER=Android.version();VCODE=Android.versionCode()}catch(e){}
- readCfg();if(CFG.jellyfin&&CFG.jellyfin.url&&CFG.jellyfin.key)jfState='loading';loadApps();loadRecent();loadPhotos();loadWatchNext();
+ readCfg();if(CFG.jellyfin&&CFG.jellyfin.url&&CFG.jellyfin.key)jfState='loading';loadApps();loadRecent();loadPhotos();loadWatchNext();loadCC();
  try{WX=JSON.parse(localStorage.getItem('fl_wx'))}catch(e){}
 }
 loadPinned();r=homeRow();applySize();applyLights();showPhoto(true);startPhotos();weather();tick();setInterval(tick,5000);render();poke();
