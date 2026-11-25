@@ -118,7 +118,10 @@ class MainActivity : Activity() {
                 if (event.repeatCount == 0) {
                     okLong = false
                     ui.removeCallbacks(longOk)
-                    ui.postDelayed(longOk, 550)
+                    ui.postDelayed(longOk, 500)
+                } else if (!okLong && (event.isLongPress || event.repeatCount >= 3)) {
+                    ui.removeCallbacks(longOk)
+                    longOk.run()
                 }
             } else if (event.action == KeyEvent.ACTION_UP) {
                 ui.removeCallbacks(longOk)
@@ -272,6 +275,49 @@ class MainActivity : Activity() {
             ui.post {
                 tryStart(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg"))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        }
+
+        /** Wi-Fi name and signal for the top bar. The name needs location access (granted by the TV Tool). */
+        @JavascriptInterface fun wifiInfo(): String {
+            val o = JSONObject()
+            try {
+                val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+                val caps = cm.getNetworkCapabilities(cm.activeNetwork)
+                o.put("connected", caps != null)
+                o.put("type", when {
+                    caps == null -> "none"
+                    caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
+                    caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET) -> "ethernet"
+                    else -> "other"
+                })
+                @Suppress("DEPRECATION")
+                val wi = (applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager).connectionInfo
+                var ssid = (wi?.ssid ?: "").trim('"')
+                if (ssid == "<unknown ssid>") ssid = ""
+                o.put("ssid", ssid)
+                @Suppress("DEPRECATION")
+                o.put("level", WifiManager.calculateSignalLevel(wi?.rssi ?: -100, 4))
+            } catch (_: Exception) { }
+            return o.toString()
+        }
+
+        /** Opens a page of the TV's own settings. */
+        @JavascriptInterface fun openSettings(name: String) {
+            val action = when (name) {
+                "wifi" -> Settings.ACTION_WIFI_SETTINGS
+                "storage" -> Settings.ACTION_INTERNAL_STORAGE_SETTINGS
+                "bluetooth" -> Settings.ACTION_BLUETOOTH_SETTINGS
+                "display" -> Settings.ACTION_DISPLAY_SETTINGS
+                "sound" -> Settings.ACTION_SOUND_SETTINGS
+                "date" -> Settings.ACTION_DATE_SETTINGS
+                "apps" -> Settings.ACTION_APPLICATION_SETTINGS
+                "about" -> Settings.ACTION_DEVICE_INFO_SETTINGS
+                else -> Settings.ACTION_SETTINGS
+            }
+            ui.post {
+                if (!tryStart(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)))
+                    tryStart(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             }
         }
 

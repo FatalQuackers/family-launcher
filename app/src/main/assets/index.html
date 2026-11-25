@@ -57,7 +57,9 @@ html.device .l3{display:none}
 .chip[hidden]{display:none}
 #watch{background:rgba(255,255,255,.1);font-weight:600;max-width:30cqw;overflow:hidden;text-overflow:ellipsis}
 #watch::before{content:'';display:inline-block;width:.6cqw;height:.6cqw;border-radius:50%;background:#4ade80;margin-right:.5cqw;vertical-align:middle}
-.wifi{width:1.8cqw;height:1.8cqw;opacity:.7}
+.tb .lbl{display:none;font-size:1.1cqw;font-weight:600;white-space:nowrap;max-width:20cqw;overflow:hidden;text-overflow:ellipsis}
+.tb.f .lbl{display:inline}
+#bWifi{background:transparent}#bWifi.f{background:#fff}#bWifi.off svg{opacity:.3}
 .tb{height:3.6cqw;min-width:3.6cqw;border-radius:2cqw;display:flex;align-items:center;justify-content:center;gap:.6cqw;padding:0 .9cqw;background:rgba(255,255,255,.13);color:#fff;cursor:pointer;transition:transform .22s var(--ease),background .22s,color .22s}
 .tb svg{width:1.8cqw;height:1.8cqw;flex:none}.tb b{font-size:1.35cqw}.tb span{font-size:1cqw;opacity:.8;white-space:nowrap}
 .tb.f{background:#fff;color:#000;transform:scale(1.08)}
@@ -208,10 +210,10 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
       <div class="rt">
         <span class="chip" id="watch" hidden></span>
         <span class="chip" id="sleep" hidden></span>
-        <svg class="wifi" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.3" r="1.2" fill="#fff" stroke="none"/></svg>
-        <div class="tb" id="bSearch" data-r="0" data-c="0" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></div>
-        <div class="tb" id="bWx" data-r="0" data-c="1" aria-label="Weather"></div>
-        <div class="tb" id="bGear" data-r="0" data-c="2" aria-label="Launcher settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.5"/><circle cx="10" cy="17" r="2.5"/></svg></div>
+        <div class="tb" id="bWifi" data-r="0" data-c="0" aria-label="Wi-Fi"><svg class="wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 16a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19.3" r="1.2" fill="currentColor" stroke="none"/></svg><span class="lbl" id="wifiName">Wi-Fi</span></div>
+        <div class="tb" id="bSearch" data-r="0" data-c="1" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></div>
+        <div class="tb" id="bWx" data-r="0" data-c="2" aria-label="Weather"></div>
+        <div class="tb" id="bGear" data-r="0" data-c="3" aria-label="Launcher settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h3M13 17h7"/><circle cx="16" cy="7" r="2.5"/><circle cx="10" cy="17" r="2.5"/></svg></div>
       </div>
     </div>
     <div class="rows" id="rows"><div class="rin" id="rin"></div></div>
@@ -265,7 +267,7 @@ if(DEVICE)document.documentElement.classList.add('device');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const tv=$('#tv'),rin=$('#rin'),rowsBox=$('#rows'),okBtn=$('#okBtn'),toastEl=$('#toast');
-const TOPEL=[$('#bSearch'),$('#bWx'),$('#bGear')];
+const TOPEL=[$('#bWifi'),$('#bSearch'),$('#bWx'),$('#bGear')];
 const OV={org:$('#org'),lib:$('#lib'),menu:$('#menu'),all:$('#all'),set:$('#set'),search:$('#srch'),fc:$('#fc'),gtv:$('#gtv'),entry:$('#entry'),qc:$('#qc')};
 
 /* ---------- Example data (web test) ---------- */
@@ -541,12 +543,16 @@ const SETS=()=>(DEVICE?sortSec:x=>x)(DEVICE?[
  {sec:'Look',n:'Change background every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
  {sec:'Look',n:'Tile size',v:S.big?'Large':'Normal',act(){S.big^=1;save();applySize();render()}},
  {sec:'About',n:'Software update',v:UPD?'Update to '+UPD.tag:'v'+VER+' · check now',act(){if(UPD){Android.installUpdate(UPD.url)}else checkUpdate(true)}},
+ {sec:'TV',n:'Wi-Fi',v:(()=>{try{const w=JSON.parse(Android.wifiInfo());return w.type==='ethernet'?'Ethernet':w.ssid||(w.connected?'Connected':'Not connected')}catch(e){return ''}})(),act(){mode='home';drawOv();Android.openSettings('wifi')}},
+ {sec:'TV',n:'Remotes & Bluetooth',v:'',act(){mode='home';drawOv();Android.openSettings('bluetooth')}},
+ {sec:'TV',n:'Display & sound',v:'',act(){mode='home';drawOv();Android.openSettings('display')}},
+ {sec:'TV',n:'Date & time',v:'',act(){mode='home';drawOv();Android.openSettings('date')}},
  {sec:'TV',n:'Open Google TV home',v:'',act(){mode='home';drawOv();Android.googleHome()}},
  {sec:'TV',n:'Google TV settings',v:'',act(){mode='home';drawOv();Android.settings()}},
  {sec:'Home screen',n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}},
  ...(()=>{let I={};try{I=JSON.parse(Android.deviceInfo())}catch(e){}const gb=b=>(b/1073741824).toFixed(1)+' GB';
   return [{sec:'About',n:'TV address',v:I.ip||'Not connected',act(){toast('Use '+(I.ip||'this')+' in the TV Tool')}},
-   {sec:'About',n:'Free storage',v:I.free?gb(I.free)+' of '+gb(I.total):'?',act(){}},
+   {sec:'About',n:'Free storage',v:I.free?gb(I.free)+' of '+gb(I.total):'?',act(){mode='home';drawOv();Android.openSettings('storage')}},
    {sec:'About',n:'This TV',v:(I.model||'TV')+' · Android '+(I.android||'')+' · v'+VER,act(){}}]})()]:[
  {n:'Weather location',v:LOCS[S.loc][0],act(){S.loc=(S.loc+1)%LOCS.length;save();weather()}},
  {n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
@@ -752,7 +758,7 @@ function ok(){
  if(mode==='move'){endMove();return}
  const it=R[r][c],el=elAt();
  if(it.k==='hb'&&it.b.id==='setup'){jfSetup();return}
- if(it.k==='top'){if(it.i===0)openSearch();else if(it.i===1){mode='fc';drawOv()}else{mode='set';si=0;drawOv()}}
+ if(it.k==='top'){if(it.i===0){if(DEVICE)Android.openSettings('wifi');else toast('Opens Wi-Fi settings on the TV')}else if(it.i===1)openSearch();else if(it.i===2){mode='fc';drawOv()}else{mode='set';si=0;drawOv()}}
  else if(it.k==='hb'){const x=item(spot),big=$('#ha'+hf);
   if(it.b.id==='play')launchAny(big,x,spot.t==='cw'||spot.t==='tvw'?'Resuming':'Playing');
   else if(it.b.id==='app')launchApp(el,x.app);
@@ -969,8 +975,13 @@ if(DEVICE){
  readCfg();if(CFG.jellyfin&&CFG.jellyfin.url&&CFG.jellyfin.key)jfState='loading';loadApps();loadRecent();loadPhotos();loadWatchNext();loadCC();
  try{WX=JSON.parse(localStorage.getItem('fl_wx'))}catch(e){}
 }
-loadPinned();r=homeRow();applySize();applyLights();showPhoto(true);startPhotos();weather();tick();setInterval(tick,5000);render();poke();
-function netState(){const off=!navigator.onLine;document.querySelector('.wifi').style.opacity=off?'.25':'.7';if(off)toast('No internet connection')}
+loadPinned();r=homeRow();wifiState();applySize();applyLights();showPhoto(true);startPhotos();weather();tick();setInterval(tick,5000);render();poke();
+function wifiState(){let w={connected:navigator.onLine,ssid:DEVICE?'':'Home Wi-Fi',type:'wifi'};
+ if(DEVICE){try{w=Object.assign(w,JSON.parse(Android.wifiInfo()))}catch(e){}}
+ const on=w.connected!==false&&navigator.onLine;$('#bWifi').classList.toggle('off',!on);
+ $('#wifiName').textContent=!on?'Not connected':w.type==='ethernet'?'Ethernet':(w.ssid||'Wi-Fi connected');return on}
+function netState(){if(!wifiState())toast('No internet connection')}
+setInterval(wifiState,30000);
 addEventListener('online',netState);addEventListener('offline',netState);
 setInterval(()=>{if(mode==='home'&&!busy)loadWatching()},60000);loadWatching();
 if(DEVICE){refreshJf(false);loadWeather();setInterval(loadWeather,30*60000);
