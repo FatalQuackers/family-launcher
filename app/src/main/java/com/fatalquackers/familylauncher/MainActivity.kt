@@ -4,7 +4,10 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.app.PendingIntent
 import android.content.Intent
+import android.content.pm.PackageInstaller
+import android.net.wifi.WifiManager
 import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -26,6 +29,11 @@ import android.widget.Toast
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.SocketTimeoutException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
@@ -133,7 +141,32 @@ class MainActivity : Activity() {
 
         @JavascriptInterface fun photos(): String = photosJson()
 
-        @JavascriptInterface fun get(id: String, url: String, headers: String) = httpGet(id, url, headers)
+        @JavascriptInterface fun get(id: String, url: String, headers: String) = request(id, "GET", url, headers, "")
+
+        @JavascriptInterface fun req(id: String, method: String, url: String, headers: String, body: String) =
+            request(id, method, url, headers, body)
+
+        @JavascriptInterface fun discover(id: String) = discoverJellyfin(id)
+
+        @JavascriptInterface fun setConfig(json: String): Boolean = try {
+            JSONObject(json); prefs.edit().putString("config", json).apply(); true
+        } catch (e: Exception) { false }
+
+        @JavascriptInterface fun versionCode(): Int = try {
+            packageManager.getPackageInfo(packageName, 0).longVersionCode.toInt()
+        } catch (e: Exception) { 0 }
+
+        @JavascriptInterface fun homeStatus(): Boolean {
+            val s = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: ""
+            val full = "$packageName/${HomeWatcher::class.java.name}"
+            return s.split(':').any { it.equals(full, true) || it.equals("$packageName/.HomeWatcher", true) }
+        }
+
+        @JavascriptInterface fun openAccessibility() {
+            ui.post { tryStart(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
+
+        @JavascriptInterface fun installUpdate(url: String) = downloadAndInstall(url)
 
         @JavascriptInterface fun settings() {
             ui.post { tryStart(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
@@ -256,14 +289,20 @@ class MainActivity : Activity() {
     }
 
     // ---------- Network (Jellyfin, weather) ----------
-    private fun httpGet(id: String, url: String, headers: String) {
+    private fun callback(id: String, code: Int, body: String) {
+        val script = "window.__net&&__net(" + JSONObject.quote(id) + "," + code + "," + JSONObject.quote(body) + ")"
+        ui.post { js(script) }
+    }
+
+    private fun request(id: String, method: String, url: String, headers: String, body: String) {
         io.execute {
             var code = 0
-            var body = ""
+            var text = ""
             try {
                 val c = URL(url).openConnection() as HttpURLConnection
                 c.connectTimeout = 8000
                 c.readTimeout = 15000
+                c.requestMethod = method.uppercase()
                 c.setRequestProperty("Accept", "application/json")
                 val h = JSONObject(if (headers.isBlank()) "{}" else headers)
                 val keys = h.keys()
@@ -271,15 +310,105 @@ class MainActivity : Activity() {
                     val k = keys.next()
                     c.setRequestProperty(k, h.getString(k))
                 }
+                if (method.uppercase() == "POST") {
+                    c.doOutput = true
+                    if (h.optString("Content-Type").isEmpty()) c.setRequestProperty("Content-Type", "application/json")
+                    c.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+                }
                 code = c.responseCode
                 val stream = if (code in 200..299) c.inputStream else c.errorStream
-                body = stream?.bufferedReader()?.use { it.readText() } ?: ""
+                text = stream?.bufferedReader()?.use { it.readText() } ?: ""
                 c.disconnect()
             } catch (e: Exception) {
-                body = e.message ?: "error"
+                text = e.message ?: "error"
             }
-            val script = "window.__net&&__net(" + JSONObject.quote(id) + "," + code + "," + JSONObject.quote(body) + ")"
-            ui.post { js(script) }
+            callback(id, code, text)
+        }
+    }
+
+    /** Jellyfin answers "who is JellyfinServer?" on UDP port 7359. */
+    private fun discoverJellyfin(id: String) {
+        io.execute {
+            val found = JSONArray()
+            val seen = HashSet<String>()
+            var lock: WifiManager.MulticastLock? = null
+            try {
+                val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                lock = wm.createMulticastLock("familyhome").apply { setReferenceCounted(false); acquire() }
+            } catch (_: Exception) { }
+            try {
+                DatagramSocket().use { s ->
+                    s.broadcast = true
+                    s.soTimeout = 700
+                    val msg = "who is JellyfinServer?".toByteArray()
+                    val to = InetAddress.getByName("255.255.255.255")
+                    repeat(2) { s.send(DatagramPacket(msg, msg.size, to, 7359)) }
+                    val buf = ByteArray(4096)
+                    val end = System.currentTimeMillis() + 3000
+                    while (System.currentTimeMillis() < end) {
+                        try {
+                            val p = DatagramPacket(buf, buf.size)
+                            s.receive(p)
+                            val o = JSONObject(String(p.data, 0, p.length, Charsets.UTF_8))
+                            val key = o.optString("Id", o.optString("Address"))
+                            if (seen.add(key)) found.put(o)
+                        } catch (_: SocketTimeoutException) {
+                        } catch (_: Exception) { }
+                    }
+                }
+            } catch (_: Exception) { }
+            try { lock?.release() } catch (_: Exception) { }
+            callback(id, 200, found.toString())
+        }
+    }
+
+    // ---------- In-app updates ----------
+    private fun updateStatus(msg: String) {
+        ui.post { js("window.onUpdate&&onUpdate(" + JSONObject.quote(msg) + ")") }
+    }
+
+    private fun downloadAndInstall(url: String) {
+        io.execute {
+            try {
+                updateStatus("Downloading the update…")
+                val f = File(cacheDir, "update.apk")
+                var u = URL(url)
+                var hops = 0
+                while (true) {
+                    val c = u.openConnection() as HttpURLConnection
+                    c.instanceFollowRedirects = false
+                    c.connectTimeout = 10000
+                    c.readTimeout = 30000
+                    val code = c.responseCode
+                    if (code in 300..399) {
+                        u = URL(u, c.getHeaderField("Location"))
+                        c.disconnect()
+                        if (++hops > 6) throw Exception("too many redirects")
+                        continue
+                    }
+                    if (code != 200) throw Exception("HTTP $code")
+                    c.inputStream.use { inp -> f.outputStream().use { inp.copyTo(it) } }
+                    c.disconnect()
+                    break
+                }
+                updateStatus("Installing…")
+                val pi = packageManager.packageInstaller
+                val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
+                params.setAppPackageName(packageName)
+                val sid = pi.createSession(params)
+                pi.openSession(sid).use { s ->
+                    s.openWrite("family-home", 0, f.length()).use { out ->
+                        f.inputStream().use { it.copyTo(out) }
+                        s.fsync(out)
+                    }
+                    val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                        (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
+                    val p = PendingIntent.getBroadcast(this, sid, Intent(this, InstallReceiver::class.java), flags)
+                    s.commit(p.intentSender)
+                }
+            } catch (e: Exception) {
+                updateStatus("Update failed: " + (e.message ?: "unknown error"))
+            }
         }
     }
 

@@ -9,6 +9,8 @@
    PICTURE: the 16:9 screen, working: now-playing banner, rows, photos behind.
    COLOUR and TYPE: near-black, white focus, colour comes from photos and show art; Manrope.
    LAYOUT: screen first, remote and test notes underneath; stacked on phones. */
+@property --la{syntax:'<color>';inherits:true;initial-value:#3b5bdb}
+@property --lb{syntax:'<color>';inherits:true;initial-value:#b45309}
 :root{color-scheme:dark;--bg:#0a0b0d;--ink:#eef0f3;--mute:#9aa0a8;--ease:cubic-bezier(.2,.8,.2,1)}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Manrope,system-ui,sans-serif;overflow-x:clip}
@@ -18,8 +20,19 @@ h1{font-size:clamp(24px,3vw,34px);line-height:1.05;margin:0;font-weight:800;lett
 .pg p{margin:0;color:var(--mute);font-size:14px}
 .tv{--k:1;position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;box-shadow:0 0 0 1px #2a2d33,0 0 0 9px #050506,0 30px 80px -20px #000;container-type:inline-size;user-select:none;-webkit-user-select:none;outline:none}
 .wall{position:absolute;inset:0;transition:opacity 1.4s ease;animation:kb 40s ease-in-out infinite alternate}
+html.device .wall{animation:none}
 .wall svg{display:block;width:100%;height:100%}
 @keyframes kb{from{transform:scale(1)}to{transform:scale(1.07)}}
+.lights{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.tv{transition:--la 1.6s ease,--lb 1.6s ease}
+.lights i{position:absolute;border-radius:50%;will-change:transform}
+.l1{left:-18cqw;top:-28cqw;width:62cqw;height:62cqw;background:radial-gradient(closest-side,var(--la),transparent);opacity:.38;animation:d1 24s ease-in-out infinite alternate}
+.l2{right:-22cqw;bottom:-38cqw;width:70cqw;height:70cqw;background:radial-gradient(closest-side,var(--lb),transparent);opacity:.32;animation:d2 30s ease-in-out infinite alternate}
+.l3{left:34cqw;top:4cqw;width:36cqw;height:36cqw;background:radial-gradient(closest-side,#fff,transparent);opacity:.07;animation:d3 19s ease-in-out infinite alternate}
+@keyframes d1{to{transform:translate(14cqw,9cqw)}}
+@keyframes d2{to{transform:translate(-16cqw,-7cqw)}}
+@keyframes d3{to{transform:translate(-12cqw,12cqw)}}
+.tv.nolights .lights{display:none}
 .shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.2) 55%),linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.1) 20%,rgba(0,0,0,.55) 50%,rgba(0,0,0,.9))}
 .hart{position:absolute;right:0;top:0;width:64%;height:38cqw;opacity:0;transition:opacity .7s ease;-webkit-mask-image:linear-gradient(90deg,transparent,#000 42%),linear-gradient(#000 55%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent,#000 42%),linear-gradient(#000 55%,transparent);mask-composite:intersect;overflow:hidden}
 .hart::before{content:'';position:absolute;right:14%;top:14%;width:17cqw;height:17cqw;border-radius:50%;background:rgba(255,255,255,.15)}
@@ -57,10 +70,11 @@ h1{font-size:clamp(24px,3vw,34px);line-height:1.05;margin:0;font-weight:800;lett
 .hb.f{background:#fff;color:#000;transform:scale(1.07)}
 .row h3{margin:0 4cqw;font-size:1.25cqw;font-weight:700;color:rgba(255,255,255,.86)}
 .row h3 small{font-size:1cqw;font-weight:500;color:rgba(255,255,255,.55);margin-left:.6cqw}
-.track{position:relative;display:flex;gap:1.3cqw;overflow:hidden;padding:1.1cqw 4cqw 1.5cqw}
-.track::after{content:'';flex:none;width:2.7cqw}
-.it{flex:none;position:relative;border-radius:.9cqw;cursor:pointer;transition:transform .26s var(--ease),box-shadow .26s var(--ease)}
-.it.f{transform:scale(1.08);box-shadow:0 0 0 .22cqw #fff,0 1.4cqw 2.8cqw rgba(0,0,0,.6);z-index:2}
+.track{position:relative;overflow:hidden;padding:1.1cqw 0 1.5cqw}
+.tin{position:relative;display:inline-flex;gap:1.3cqw;padding:0 4cqw;transition:transform .36s var(--ease);will-change:transform}
+.tin.nt{transition:none}
+.it{flex:none;position:relative;border-radius:.9cqw;cursor:pointer;transition:transform .22s var(--ease)}
+.it.f{transform:scale(1.08);box-shadow:0 0 0 .22cqw #fff,0 .8cqw 1.6cqw rgba(0,0,0,.45);z-index:2}
 .cw{width:calc(21cqw*var(--k));aspect-ratio:16/9;overflow:hidden;background:radial-gradient(120% 100% at 85% 0%,var(--b),var(--a) 72%)}
 .cw::before{content:'';position:absolute;right:-3cqw;top:-4cqw;width:13cqw;height:13cqw;border-radius:50%;background:rgba(255,255,255,.12)}
 .cw::after{content:'';position:absolute;left:-2cqw;bottom:-6cqw;width:16cqw;height:10cqw;border-radius:50%;background:rgba(0,0,0,.18)}
@@ -108,6 +122,13 @@ h1{font-size:clamp(24px,3vw,34px);line-height:1.05;margin:0;font-weight:800;lett
 .sr i{flex:none;width:8cqw;aspect-ratio:16/9;border-radius:.6cqw;background:radial-gradient(120% 100% at 85% 0%,var(--b),var(--a) 72%)}
 .sr b{display:block;font-size:1.35cqw;line-height:1.2}.sr span{font-size:1cqw;color:var(--mute)}
 .sr.f{background:#fff;color:#000}.sr.f span{color:#555}
+.side{overflow-y:auto}
+#entry{grid-template-columns:auto;place-items:start center;align-content:start;padding:4cqw 5cqw}
+.ehint{font-size:1.15cqw;color:var(--mute);margin:-.6cqw 0 1.4cqw;max-width:60cqw}
+.ekb{display:grid;grid-template-columns:repeat(7,5.4cqw);gap:.6cqw}
+.qcp{width:56cqw;background:#17191d;border-radius:1.4cqw;padding:2.8cqw;text-align:center;box-shadow:0 2cqw 5cqw rgba(0,0,0,.6)}
+.qcode{font-size:6cqw;font-weight:800;letter-spacing:.6cqw;margin:1cqw 0 1.4cqw;font-variant-numeric:tabular-nums}
+.qcp p{font-size:1.25cqw;color:rgba(255,255,255,.8);margin:.4cqw 0}.qcp .qs{color:var(--mute);margin-top:1.4cqw;font-size:1.1cqw}
 .fcp{width:58cqw;background:#17191d;border-radius:1.4cqw;padding:2.4cqw;box-shadow:0 2cqw 5cqw rgba(0,0,0,.6)}
 .days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1.2cqw}
 .day{background:rgba(255,255,255,.06);border-radius:1cqw;padding:1.4cqw 1cqw;text-align:center;display:grid;justify-items:center;gap:.4cqw}
@@ -168,6 +189,7 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
   <div class="tv" id="tv" tabindex="0" aria-label="TV screen preview">
     <div class="wall" id="w0"></div><div class="wall" id="w1" style="opacity:0"></div>
     <div class="shade"></div>
+    <div class="lights"><i class="l1"></i><i class="l2"></i><i class="l3"></i></div>
     <div class="hart" id="ha0"></div><div class="hart" id="ha1"></div>
     <div class="top">
       <div class="clk"><span class="tm" id="tm"></span><span class="dt" id="dt"></span><span class="cap" id="cap"></span></div>
@@ -186,6 +208,8 @@ html.device .tv{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;box-s
     <div class="ov" id="set"></div>
     <div class="ov" id="srch"></div>
     <div class="ov" id="fc"></div>
+    <div class="ov" id="entry"></div>
+    <div class="ov" id="qc"></div>
     <div class="ov" id="gtv"><div class="gth">Google TV home</div><div class="gtr"><i></i><i></i><i></i><i></i></div><div class="gtr sm"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="gtr sm"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="gtn">Stand-in for Google's home screen · press Back or Home to return</div></div>
     <div class="toast" id="toast"></div>
   </div>
@@ -228,7 +252,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const tv=$('#tv'),rin=$('#rin'),rowsBox=$('#rows'),okBtn=$('#okBtn'),toastEl=$('#toast');
 const TOPEL=[$('#bSearch'),$('#bWx'),$('#bGear')];
-const OV={menu:$('#menu'),all:$('#all'),set:$('#set'),search:$('#srch'),fc:$('#fc'),gtv:$('#gtv')};
+const OV={menu:$('#menu'),all:$('#all'),set:$('#set'),search:$('#srch'),fc:$('#fc'),gtv:$('#gtv'),entry:$('#entry'),qc:$('#qc')};
 
 /* ---------- Example data (web test) ---------- */
 const MOCK_APPS={
@@ -261,10 +285,15 @@ const PREFERRED=['com.github.damontecres.wholphin','org.jellyfin.androidtv','com
  'au.com.ninenow.ctv','com.apple.atve.androidtv.appletv','com.spotify.tv.android','com.google.android.youtube.tvkids'];
 let APPS=DEVICE?{}:MOCK_APPS,ALL=Object.keys(APPS),DEF=DEVICE?[]:MOCK_DEF;
 let CW=DEVICE?[]:MOCK_CW,NEW=DEVICE?[]:MOCK_NEW,RECENT=DEVICE?[]:MOCK_RECENT;
-let CFG={},WX=null,PHOTOS=[],jfState=DEVICE?'none':'ok',lastJf=0,MODEL='',VER='';
+let CFG={},WX=null,PHOTOS=[],jfState=DEVICE?'none':'ok',lastJf=0,MODEL='',VER='',VCODE=0,UPD=null,ent=null,qcS=null;
 const NETCB={};let netId=0;
 window.__net=(id,code,body)=>{const f=NETCB[id];delete NETCB[id];if(f)f({code,body})};
-const net=(url,headers)=>new Promise(res=>{const id='n'+(++netId);NETCB[id]=res;try{Android.get(id,url,JSON.stringify(headers||{}))}catch(e){delete NETCB[id];res({code:0,body:''})}});
+const req=(method,url,headers,body)=>new Promise(res=>{const id='n'+(++netId);NETCB[id]=res;try{Android.req(id,method,url,JSON.stringify(headers||{}),body||'')}catch(e){delete NETCB[id];res({code:0,body:''})}});
+const net=(url,headers)=>req('GET',url,headers,'');
+const discover=()=>new Promise(res=>{const id='d'+(++netId);NETCB[id]=res;try{Android.discover(id)}catch(e){delete NETCB[id];res({code:0,body:'[]'})}});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const jfAuth=tok=>`MediaBrowser Client="Family Home", Device="${MODEL||'TV'}", DeviceId="familyhome-${(MODEL||'tv').replace(/\W/g,'')}", Version="1.0"`+(tok?`, Token="${tok}"`:'');
+const normUrl=u=>{u=String(u||'').trim();if(!/^https?:\/\//i.test(u))u='http://'+u;u=u.replace(/\/+$/,'');if(/^http:\/\/[^\/:]+$/i.test(u))u+=':8096';return u};
 const jfPkg=()=>{const want=(CFG.jellyfin&&CFG.jellyfin.app)||'com.github.damontecres.wholphin';
  if(!DEVICE)return 'wholphin';if(APPS[want])return want;return ['com.github.damontecres.wholphin','org.jellyfin.androidtv'].find(p=>APPS[p])||want};
 const jfName=()=>(APPS[jfPkg()]&&APPS[jfPkg()].n)||'Jellyfin';
@@ -296,15 +325,16 @@ function mapItem(it,u){
   d:(it.Overview||'').replace(/\s+/g,' ').slice(0,170),u,p:(ud.PlayedPercentage||0)/100,left:lm?fmtLeft(lm):'',c:colors(it.Id),img:back,th}}
 async function jget(path){
  const j=CFG.jellyfin;
- const r=await net(j.url.replace(/\/+$/,'')+path,{Authorization:`MediaBrowser Client="Family Home", Device="${MODEL||'TV'}", DeviceId="familyhome-${(MODEL||'tv').replace(/\W/g,'')}", Version="1.0", Token="${j.key}"`});
+ const r=await net(j.url.replace(/\/+$/,'')+path,{Authorization:jfAuth(j.key)});
  if(r.code<200||r.code>299)throw new Error('HTTP '+r.code);return JSON.parse(r.body)}
 async function jtry(paths){for(const p of paths){try{return await jget(p)}catch(e){}}return null}
 async function loadJellyfin(){
  const j=CFG.jellyfin;if(!j||!j.url||!j.key){jfState='none';return}
  lastJf=Date.now();jfState='loading';
- const users=await jtry(['/Users']);
+ let users=await jtry(['/Users']);
+ if(!Array.isArray(users)&&j.userId)users=[{Id:j.userId,Name:j.userName||'Me'}];
  if(!Array.isArray(users)){jfState='error';return}
- const live=users.filter(u=>!(u.Policy&&u.Policy.IsDisabled));
+ const live=users.filter(u=>!(u.Policy&&(u.Policy.IsDisabled||u.Policy.IsHidden&&false)));
  const all=[];
  for(const u of live){
   const r=await jtry([`/UserItems/Resume?userId=${u.Id}&limit=8&fields=Overview&mediaTypes=Video`,`/Users/${u.Id}/Items/Resume?Limit=8&Fields=Overview&MediaTypes=Video`]);
@@ -324,23 +354,25 @@ async function loadWeather(){
  const name=(CFG.weather&&CFG.weather.name)||'Sydney';
  try{
   const g=await net(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1`);
-  const gl=(JSON.parse(g.body).results||[])[0];if(!gl)return;
+  const gl=(JSON.parse(g.body).results||[])[0];if(!gl)return false;
   const f=await net(`https://api.open-meteo.com/v1/forecast?latitude=${gl.latitude}&longitude=${gl.longitude}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`);
   const d=JSON.parse(f.body),now=WMAP(d.current.weather_code);
   WX={name:gl.name,now:Math.round(d.current.temperature_2m),ic:now[0],txt:now[1],
    days:d.daily.time.map((t,i)=>({n:i?new Date(t+'T12:00').toLocaleDateString('en-AU',{weekday:'short'}):'Today',ic:WMAP(d.daily.weather_code[i])[0],hi:Math.round(d.daily.temperature_2m_max[i]),lo:Math.round(d.daily.temperature_2m_min[i])}))};
   try{localStorage.setItem('fl_wx',JSON.stringify(WX))}catch(e){}
-  weather();
+  weather();return true;
  }catch(e){}
+ return false;
 }
 
 /* ---------- Saved choices ---------- */
 const INTV=[15,30,60,300],INTVN=['15 sec','30 sec','1 min','5 min'],SAVER=[30,60,300,0],SAVERN=['30 sec','1 min','5 min','Off'];
-const S={loc:0,unit:0,intv:DEVICE?2:0,saver:1,big:0};
+const S={loc:0,unit:0,intv:DEVICE?2:0,saver:1,big:0,lights:1,wall:0};
+const WALLN=['Photos (or built-in)','Built-in scenes','Jellyfin artwork'];
 const PINKEY=DEVICE?'fl_pin_tv':'fl_pin2';
 let pinned=null;
 try{const s=JSON.parse(localStorage.getItem(DEVICE?'fl_set_tv':'fl_set2'));if(s&&typeof s==='object')for(const k in S)if(Number.isInteger(s[k]))S[k]=s[k]}catch(e){}
-if(S.loc>=LOCS.length)S.loc=0;if(S.intv>=INTV.length)S.intv=0;if(S.saver>=SAVER.length)S.saver=1;
+if(S.loc>=LOCS.length)S.loc=0;if(S.wall>2)S.wall=0;if(S.intv>=INTV.length)S.intv=0;if(S.saver>=SAVER.length)S.saver=1;
 const save=()=>{try{localStorage.setItem(PINKEY,JSON.stringify(pinned));localStorage.setItem(DEVICE?'fl_set_tv':'fl_set2',JSON.stringify(S))}catch(e){}};
 function loadPinned(){
  let p=null;try{p=JSON.parse(localStorage.getItem(PINKEY))}catch(e){}
@@ -352,14 +384,14 @@ function loadPinned(){
 let mode='home',r=1,c=0,last={},menu=null,ai=0,si=0,moving=-1,hold=null,R=[],spot={t:'cw',i:0},hf=0,htT,curY=0;
 let busy=null,saving=false,idleT,sleepEnd=0,sz='k',sk=0,sr=0,q='';
 const PLACE=()=>({t:'Family Home',m:jfState==='loading'?'Loading what everyone is watching…':jfState==='error'?'Couldn’t reach your Jellyfin server':'Jellyfin isn’t connected yet',
- d:jfState==='none'?'Run “Set up everything” in the TV Tool on your PC to add your server.':jfState==='error'?'Check the server is switched on, then press Refresh in Quick actions.':'',c:['#1d2533','#5a6b8a']});
+ d:jfState==='none'?'Choose Set up Jellyfin below. Family Home finds your server and you approve it on your phone.':jfState==='error'?'Check the server is switched on, then press Refresh in Quick actions.':'',c:['#1d2533','#5a6b8a']});
 const item=s=>s.t==='cw'?CW[s.i]:s.t==='new'?NEW[s.i]:PLACE();
 function fixSpot(){if(spot.t==='cw'&&CW[spot.i])return;if(spot.t==='new'&&NEW[spot.i])return;spot=CW.length?{t:'cw',i:0}:NEW.length?{t:'new',i:0}:{t:'none',i:0}}
 const art=x=>`radial-gradient(120% 100% at 80% 20%,${x.c[1]},${x.c[0]} 62%,#07080a 125%)`;
 const heroBg=x=>(x.img?`url("${x.img}"),`:'')+art(x);
 const appBg=A=>`linear-gradient(160deg,rgba(255,255,255,.16),transparent 60%),${A.c}`;
 const appStyle=A=>`--a:${A.c||'#24272d'};--t:${A.t||'#fff'}`;
-const heroBtns=()=>spot.t==='cw'?[{id:'play',n:'Resume'},{id:'start',n:'Start over'},{id:'jf',n:'Open '+jfName()}]:spot.t==='new'?[{id:'play',n:'Play'},{id:'jf',n:'Open '+jfName()}]:[{id:'jf',n:'Open '+jfName()}];
+const heroBtns=()=>spot.t==='cw'?[{id:'play',n:'Resume'},{id:'start',n:'Start over'},{id:'jf',n:'Open '+jfName()}]:spot.t==='new'?[{id:'play',n:'Play'},{id:'jf',n:'Open '+jfName()}]:(DEVICE&&jfState!=='loading'?[{id:'setup',n:'Set up Jellyfin'},{id:'jf',n:'Open '+jfName()}]:[{id:'jf',n:'Open '+jfName()}]);
 const QUICK=DEVICE?[{id:'gtvhome',n:'Google TV home'},{id:'gtv',n:'Google TV settings'},{id:'refresh',n:'Refresh'},{id:'photo',n:'Next photo'}]
  :[{id:'gtvhome',n:'Google TV home'},{id:'sleep',n:'Sleep timer'},{id:'input',n:'Inputs'},{id:'photo',n:'Next photo'},{id:'gtv',n:'Google TV settings'}];
 const rows=()=>[TOPEL.map((e,i)=>({k:'top',i})),heroBtns().map(b=>({k:'hb',b})),CW.map((x,i)=>({k:'cw',i})),NEW.map((x,i)=>({k:'new',i})),RECENT.map(a=>({k:'rec',a})),[...pinned.map(a=>({k:'pin',a})),{k:'all'}],QUICK.map(x=>({k:'q',q:x}))];
@@ -385,11 +417,12 @@ function render(){
  if(!R[r]||!R[r].length){r=1;c=0}
  if(c>=R[r].length)c=R[r].length-1;
  rin.innerHTML=`<section class="hero"><div class="htx" id="htx"></div><div class="hbtn" id="hbtn"></div></section>`+
-  R.map((row,k)=>k<2||!row.length?'':`<section class="row" data-row="${k}"><h3>${LABELS[k]}</h3><div class="track">${row.map((it,i)=>tile(it,k,i)).join('')}</div></section>`).join('');
+  R.map((row,k)=>k<2||!row.length?'':`<section class="row" data-row="${k}"><h3>${LABELS[k]}</h3><div class="track"><div class="tin">${row.map((it,i)=>tile(it,k,i)).join('')}</div></div></section>`).join('');
  paintHero(false);focus(false);
 }
 function paintHero(anim){
  const it=item(spot),isCw=spot.t==='cw';
+ tv.style.setProperty('--la',it.c[1]);tv.style.setProperty('--lb',it.c[0]);
  const A=$('#ha'+hf),B=$('#ha'+(1-hf));
  if(anim){B.style.backgroundImage=heroBg(it);B.classList.add('on');A.classList.remove('on');hf=1-hf}
  else{A.style.backgroundImage=heroBg(it);A.classList.add('on');B.classList.remove('on')}
@@ -401,16 +434,17 @@ function paintHero(anim){
  R[1]=heroBtns().map(b=>({k:'hb',b}));
  $('#hbtn').innerHTML=R[1].map((x,i)=>`<div class="hb${x.b.id==='play'?' pri':''}" data-r="1" data-c="${i}">${esc(x.b.n)}</div>`).join('');
 }
-function elAt(){if(r===0)return TOPEL[c];if(r===1)return $('#hbtn').children[c];const t=rin.querySelector(`.row[data-row="${r}"] .track`);return t&&t.children[c]}
+function elAt(){if(r===0)return TOPEL[c];if(r===1)return $('#hbtn').children[c];const t=rin.querySelector(`.row[data-row="${r}"] .tin`);return t&&t.children[c]}
 function focus(sm=true){
  TOPEL.forEach(e=>e.classList.remove('f'));rin.querySelectorAll('.f').forEach(e=>e.classList.remove('f'));
  const it=R[r]&&R[r][c];
  if(it&&(it.k==='cw'||it.k==='new')&&(spot.t!==it.k||spot.i!==it.i)){spot={t:it.k,i:it.i};paintHero(sm)}
  const el=elAt();if(!el)return;el.classList.add('f');
- if(r>=2){const tr=el.parentElement,pad=tr.clientWidth*.05;let L=tr.scrollLeft;
-  if(el.offsetLeft+el.offsetWidth>L+tr.clientWidth-pad)L=el.offsetLeft+el.offsetWidth-tr.clientWidth+pad;
+ if(r>=2){const tin=el.parentElement,W=tin.parentElement.clientWidth,pad=W*.05;let L=+tin.dataset.x||0;
+  if(el.offsetLeft+el.offsetWidth>L+W-pad)L=el.offsetLeft+el.offsetWidth-W+pad;
   if(el.offsetLeft<L+pad)L=el.offsetLeft-pad;
-  tr.scrollTo({left:Math.max(0,L),behavior:sm?'smooth':'auto'})}
+  L=Math.max(0,Math.min(L,tin.offsetWidth-W));
+  if(L!==(+tin.dataset.x||0)||!sm){tin.dataset.x=L;if(!sm)tin.classList.add('nt');tin.style.transform=`translateX(${-L}px)`;if(!sm){void tin.offsetWidth;tin.classList.remove('nt')}}}
  let y=curY;const H=rowsBox.clientHeight,max=Math.max(0,rin.offsetHeight-H);
  if(r<=2)y=0;else{const sec=el.closest('.row'),top=sec.offsetTop,bot=top+sec.offsetHeight;if(bot-y>H)y=bot-H;if(top-y<0)y=top}
  curY=Math.min(max,Math.max(0,y));rin.style.transform=`translateY(${-curY}px)`;
@@ -433,17 +467,23 @@ function wxNow(){
  const L=LOCS[S.loc],off=[[0,0],[2,1],[-1,0],[-3,-2],[1,1]],ic=[L[3],'sun','pc','cl','sun'],d=new Date();
  return {name:L[0],now:L[1],ic:L[3],txt:L[2],days:off.map((o,i)=>({n:i?new Date(d.getTime()+i*864e5).toLocaleDateString('en-AU',{weekday:'short'}):'Today',ic:ic[i],hi:L[1]+o[0],lo:L[1]-8+o[1]}))};
 }
+const JFAPPS=['com.github.damontecres.wholphin','org.jellyfin.androidtv'];
 const SETS=()=>DEVICE?[
- {n:'Weather location',v:(WX&&WX.name)||(CFG.weather&&CFG.weather.name)||'Sydney',act(){toast('Change the location with the TV Tool on your PC')}},
+ {n:'Home button',v:(()=>{try{return Android.homeStatus()?'Working':'Not connected'}catch(e){return '?'}})(),act(){if(Android.homeStatus())toast('The Home button opens Family Home');else{Android.openAccessibility();toast('Turn on “Family Home button”. If it’s greyed out, run option 5 in the TV Tool.')}}},
+ {n:'Jellyfin server',v:CFG.jellyfin&&CFG.jellyfin.url?CFG.jellyfin.url.replace(/^https?:\/\//,'')+(CFG.jellyfin.key?'':' (not signed in)'):'Find automatically',act(){mode='home';drawOv();jfSetup()}},
+ {n:'Open shows with',v:jfName(),act(){const cands=JFAPPS.filter(p=>APPS[p]);if(cands.length<2){toast('Only '+jfName()+' is installed');return}const nx=cands[(cands.indexOf(jfPkg())+1)%cands.length];saveCfg(()=>{CFG.jellyfin=Object.assign({},CFG.jellyfin||{},{app:nx})});render()}},
+ {n:'Weather location',v:(WX&&WX.name)||(CFG.weather&&CFG.weather.name)||'Sydney',act(){const cur=(CFG.weather&&CFG.weather.name)||'';
+   openEntry('Weather location','Type your suburb or city, then choose Done.',TEXTK,cur.toLowerCase(),v=>{v=v.trim();if(!v)return;saveCfg(()=>{CFG.weather={name:v}});toast('Finding '+v+'…');loadWeather().then(ok=>toast(ok?'Weather for '+WX.name:'Couldn’t find '+v))})}},
  {n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
- {n:'Jellyfin server',v:CFG.jellyfin&&CFG.jellyfin.url?CFG.jellyfin.url.replace(/^https?:\/\//,''):'Not set up',act(){refreshJf(true)}},
+ {n:'Wallpaper',v:WALLN[S.wall],act(){S.wall=(S.wall+1)%WALLN.length;save();photo=0;showPhoto(true);startPhotos()}},
+ {n:'Moving lights',v:S.lights?'On':'Off',act(){S.lights^=1;save();applyLights()}},
  {n:'Change photo every',v:INTVN[S.intv],act(){S.intv=(S.intv+1)%INTV.length;save();startPhotos()}},
  {n:'Screensaver after',v:SAVERN[S.saver],act(){S.saver=(S.saver+1)%SAVER.length;save();poke()}},
  {n:'Tile size',v:S.big?'Large':'Normal',act(){S.big^=1;save();applySize();render()}},
+ {n:'Software update',v:UPD?'Update to '+UPD.tag:'v'+VER+' · check now',act(){if(UPD){Android.installUpdate(UPD.url)}else checkUpdate(true)}},
  {n:'Open Google TV home',v:'',act(){mode='home';drawOv();Android.googleHome()}},
  {n:'Google TV settings',v:'',act(){mode='home';drawOv();Android.settings()}},
- {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}},
- {n:'Version',v:VER||'',act(){}}]:[
+ {n:'Reset home layout',v:'',act(){pinned=DEF.slice();save();render();toast('Home layout reset')}}]:[
  {n:'Weather location',v:LOCS[S.loc][0],act(){S.loc=(S.loc+1)%LOCS.length;save();weather()}},
  {n:'Temperature',v:S.unit?'°F':'°C',act(){S.unit^=1;save();weather()}},
  {n:'Jellyfin server',v:'192.168.1.50:8096',act(){toast('Connected · 6 in progress, 6 recently added')}},
@@ -456,17 +496,78 @@ function drawOv(){
  for(const k in OV)OV[k].classList.toggle('on',mode===k);
  if(mode==='menu')OV.menu.innerHTML=`<div class="panel"><h4>${esc(menu.t)}</h4>${menu.o.map((o,i)=>`<div class="opt${i===menu.i?' f':''}" data-mi="${i}">${esc(o)}</div>`).join('')}</div>`;
  if(mode==='all')OV.all.innerHTML=`<h4>All apps<small>Hold OK to add to or remove from home</small></h4><div class="grid">${ALL.map((a,i)=>{const A=APPS[a];return `<div class="it app${A.ic&&!A.img?' hasic':''}${i===ai?' f':''}" data-ai="${i}" style="${appStyle(A)}">${appInner(A)}${pinned.includes(a)?'<em>On home</em>':''}</div>`}).join('')}</div>`;
- if(mode==='all'){const f=OV.all.querySelector('.f');if(f)f.scrollIntoView({block:'nearest'})}
+ if(mode==='all'||mode==='set'){const f=OV[mode].querySelector('.f');if(f)f.scrollIntoView({block:'nearest'})}
  if(mode==='set')OV.set.innerHTML=`<div class="side"><h4>Launcher settings</h4>${SETS().map((s,i)=>`<div class="opt${i===si?' f':''}" data-si="${i}"><span>${esc(s.n)}</span><b>${esc(s.v)}</b></div>`).join('')}<p>${DEVICE?'Press OK to change a setting.':'Press OK to change a setting. Example values; on the TV you set them once.'}</p></div>`;
  if(mode==='search'){const res=results();if(sr>=res.length)sr=Math.max(0,res.length-1);if(!res.length)sz='k';
   OV.search.innerHTML=`<div><div class="sq">${q?esc(q):'<span>Search shows, movies and apps</span>'}<i class="caret"></i></div><div class="kb">${KEYS.map((k,i)=>`<div class="key${k.length>1?' w':''}${sz==='k'&&i===sk?' f':''}" data-sk="${i}">${k==='space'?'Space':k==='del'?'⌫ Delete':k==='clear'?'Clear':k}</div>`).join('')}</div></div>`+
   `<div class="sres"><h5>${q?'Results':'Suggestions'}</h5>${res.map((x,i)=>{const A=x.go==='app'?APPS[x.k]:null;
    const bg=A?(A.img?`background-image:url('${A.img}')`:`background:${A.c||'#24272d'}`):(x.x.th?`background-image:url('${esc(x.x.th)}'),${art(x.x)}`:`background-image:${art(x.x)}`);
    return `<div class="sr${sz==='r'&&i===sr?' f':''}" data-sr="${i}"><i style="${bg}"></i><div><b>${esc(x.t)}</b><span>${esc(x.sub)}</span></div></div>`}).join('')||'<p>Nothing matches. Try another word.</p>'}</div>`}
+ if(mode==='entry')OV.entry.innerHTML=`<div><h4>${esc(ent.t)}</h4><p class="ehint">${esc(ent.hint)}</p><div class="sq">${ent.val?esc(ent.val):'<span>Type with the keys below</span>'}<i class="caret"></i></div><div class="ekb">${ent.keys.map((k,i)=>`<div class="key${i===ent.i?' f':''}" data-ek="${i}">${k===' '?'Space':k==='del'?'⌫':k==='clear'?'Clear':k==='done'?'Done':esc(k)}</div>`).join('')}</div></div>`;
+ if(mode==='qc')OV.qc.innerHTML=`<div class="qcp"><h4>Sign in to ${esc(qcS.name)}</h4><p>On your phone, open Jellyfin, go to your profile and choose <b>Quick Connect</b>. Type this code:</p><div class="qcode">${esc(qcS.code)}</div><p class="qs">${esc(qcS.status)}</p></div>`;
  if(mode==='fc'){const W=wxNow();OV.fc.innerHTML=W?`<div class="fcp"><h4>${esc(W.name)}<small>${T(W.now)}° now · ${esc(W.txt)}</small></h4><div class="days">${W.days.map(d=>`<div class="day"><span>${esc(d.n)}</span>${ICON[d.ic]||ICON.pc}<b>${T(d.hi)}°</b><em>${T(d.lo)}°</em></div>`).join('')}</div><p>${DEVICE?'Forecast from Open-Meteo. Press Back to close.':'Example forecast. On the TV this comes from Open-Meteo. Press Back to close.'}</p></div>`
   :`<div class="fcp"><h4>Weather</h4><p>Weather isn’t loaded yet. Check the TV’s internet connection.</p></div>`}
 }
 function openMenu(t,o,cb){menu={t,o,i:0,cb};mode='menu';drawOv()}
+const ADDRK=[...'1234567890abcdefghijklmnopqrstuvwxyz.:-','del','clear','done'];
+const TEXTK=[...'abcdefghijklmnopqrstuvwxyz',' ','-',"'",'del','clear','done'];
+function openEntry(t,hint,keys,val,done){ent={t,hint,keys,val:val||'',i:0,done};mode='entry';drawOv()}
+function entKey(k){
+ if(k==='done'){const e=ent;mode='home';drawOv();e.done(e.val);return}
+ if(k==='del')ent.val=ent.val.slice(0,-1);else if(k==='clear')ent.val='';else ent.val=(ent.val+k).slice(0,60);
+ drawOv();
+}
+function saveCfg(change){change();try{Android.setConfig(JSON.stringify(CFG))}catch(e){}}
+function saveJf(o){const app=(CFG.jellyfin&&CFG.jellyfin.app)||'com.github.damontecres.wholphin';
+ saveCfg(()=>{CFG.jellyfin={url:o.url,key:o.key||'',userId:o.userId||'',userName:o.userName||'',app}})}
+async function jfSetup(){
+ toast('Looking for Jellyfin on your network…');
+ const r=await discover();let list=[];try{list=JSON.parse(r.body)||[]}catch(e){}
+ const opts=list.map(x=>`${x.Name||'Jellyfin'} · ${String(x.Address||'').replace(/^https?:\/\//,'')}`);
+ openMenu(list.length?'Jellyfin servers found':'No server found automatically',[...opts,'Type the address','Cancel'],v=>{
+  const k=opts.indexOf(v);
+  if(k>=0)startQC(list[k].Address,list[k].Name);
+  else if(v==='Type the address')openEntry('Jellyfin server address','For example 192.168.1.50:8096. Choose Done when finished.',ADDRK,
+   ((CFG.jellyfin&&CFG.jellyfin.url)||'').replace(/^https?:\/\//,''),async val=>{
+    if(!val.trim())return;const u=normUrl(val);toast('Checking '+u.replace(/^https?:\/\//,'')+'…');
+    const t=await net(u+'/System/Info/Public');let nm='';try{nm=JSON.parse(t.body).ServerName}catch(e){}
+    if(t.code===200)startQC(u,nm);else toast('No Jellyfin server answered at that address')});
+ });
+}
+async function startQC(url,name){
+ url=normUrl(url);
+ if(qcS)qcS.stop=true;
+ const me={url,name:name||url.replace(/^https?:\/\//,''),code:'······',status:'Getting a code…',stop:false,expired:false};qcS=me;mode='qc';drawOv();
+ let r=await req('POST',url+'/QuickConnect/Initiate',{Authorization:jfAuth()},'');
+ if(r.code===404||r.code===405)r=await req('GET',url+'/QuickConnect/Initiate',{Authorization:jfAuth()},'');
+ if(me.stop)return;
+ if(r.code<200||r.code>299){saveJf({url});me.expired=true;
+  me.status=r.code===401||r.code===403?'Quick Connect is switched off. In Jellyfin go to Dashboard › General, turn on Quick Connect, then press OK to try again.':'Couldn’t start Quick Connect ('+(r.code||'no answer')+'). Press OK to try again.';drawOv();return}
+ let d={};try{d=JSON.parse(r.body)}catch(e){}
+ me.code=d.Code||'??????';me.status='Waiting for you to approve on your phone…';drawOv();
+ const t0=Date.now();
+ while(!me.stop&&Date.now()-t0<5*60000){
+  await sleep(3000);if(me.stop)return;
+  const cc=await net(url+'/QuickConnect/Connect?secret='+encodeURIComponent(d.Secret),{Authorization:jfAuth()});
+  let ok=false;try{ok=JSON.parse(cc.body).Authenticated}catch(e){}
+  if(ok){
+   const a=await req('POST',url+'/Users/AuthenticateWithQuickConnect',{Authorization:jfAuth(),'Content-Type':'application/json'},JSON.stringify({Secret:d.Secret}));
+   let ad={};try{ad=JSON.parse(a.body)}catch(e){}
+   if(!ad.AccessToken){me.status='Approved, but signing in failed. Press OK to try again.';me.expired=true;drawOv();return}
+   saveJf({url,key:ad.AccessToken,userId:ad.User&&ad.User.Id,userName:ad.User&&ad.User.Name});
+   me.stop=true;mode='home';drawOv();toast('Signed in to Jellyfin as '+((ad.User&&ad.User.Name)||'you'));refreshJf(false);return}
+ }
+ if(!me.stop){me.status='The code expired. Press OK for a new one.';me.expired=true;drawOv()}
+}
+async function checkUpdate(say){
+ if(!DEVICE){if(say)toast('Updates work on the TV');return}
+ try{const r=await net('https://api.github.com/repos/FatalQuackers/family-launcher/releases/latest',{'User-Agent':'FamilyHome','Accept':'application/vnd.github+json'});
+  const d=JSON.parse(r.body),n=parseInt(String(d.tag_name||'').split('.').pop(),10),a=(d.assets||[]).find(x=>/\.apk$/i.test(x.name));
+  if(a&&n>VCODE){const fresh=!UPD;UPD={tag:d.tag_name,url:a.browser_download_url};if(say||fresh)toast('Update '+d.tag_name+' available · Settings › Software update');if(mode==='set')drawOv()}
+  else{UPD=null;if(say)toast('Family Home is up to date (v'+VER+')')}
+ }catch(e){if(say)toast('Couldn’t check for updates')}
+}
+window.onUpdate=m=>toast(m);
 function endMove(){mode='home';moving=-1;save();render();toast('Layout saved')}
 let tt;function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('show'),2300)}
 
@@ -509,7 +610,11 @@ function nav(dr,dc){
    else if(dc>0){if(P.b===6){if(res.length){sz='r';sr=0}}else sk=kat(P.row,P.b+1)}
    if(dr<0&&P.row>0)sk=kat(P.row-1,P.a);else if(dr>0&&P.row<5)sk=kat(P.row+1,P.a)}
   drawOv();return}
- if(mode==='fc'||mode==='gtv')return;
+ if(mode==='entry'){const n=ent.keys.length,i=ent.i;let j=i;
+  if(dc)j=(Math.floor((i+dc)/7)===Math.floor(i/7)&&i+dc>=0&&i+dc<n)?i+dc:i;
+  if(dr){const t=i+dr*7;if(t>=0&&t<n)j=t;else if(dr>0&&Math.floor(i/7)<Math.floor((n-1)/7))j=n-1}
+  ent.i=j;drawOv();return}
+ if(mode==='fc'||mode==='gtv'||mode==='qc')return;
  if(mode==='move'){if(dc){const j=moving+dc;if(j<0||j>=pinned.length)return;[pinned[moving],pinned[j]]=[pinned[j],pinned[moving]];moving=j;c=j;render()}return}
  if(dc)c=Math.min(R[r].length-1,Math.max(0,c+dc));
  if(dr){let nr=r+dr;while(nr>=0&&nr<R.length&&!R[nr].length)nr+=dr;if(nr<0||nr>=R.length)return;last[r]=c;r=nr;c=Math.min(R[r].length-1,last[r]??0)}
@@ -529,9 +634,12 @@ function ok(){
  if(mode==='all'){launchApp(OV.all.querySelector(`[data-ai="${ai}"]`),ALL[ai]);return}
  if(mode==='set'){SETS()[si].act();drawOv();return}
  if(mode==='search'){if(sz==='r')openResult(sr);else type(KEYS[sk]);return}
+ if(mode==='entry'){entKey(ent.keys[ent.i]);return}
+ if(mode==='qc'){if(qcS&&qcS.expired)startQC(qcS.url,qcS.name);return}
  if(mode==='fc'||mode==='gtv'){back();return}
  if(mode==='move'){endMove();return}
  const it=R[r][c],el=elAt();
+ if(it.k==='hb'&&it.b.id==='setup'){jfSetup();return}
  if(it.k==='top'){if(it.i===0)openSearch();else if(it.i===1){mode='fc';drawOv()}else{mode='set';si=0;drawOv()}}
  else if(it.k==='hb'){const x=item(spot),big=$('#ha'+hf);
   if(it.b.id==='play')launchItem(big,x,spot.t==='cw'?'Resuming':'Playing');
@@ -568,6 +676,7 @@ function long(){
 function openSearch(){mode='search';sz='k';sk=0;sr=0;drawOv()}
 function back(){
  if(mode==='menu'){mode='home';menu=null;drawOv()}
+ else if(mode==='qc'){if(qcS)qcS.stop=true;mode='home';drawOv()}
  else if(mode==='move')endMove();
  else if(mode!=='home'){mode='home';drawOv();render()}
  else if(r!==1||c!==0)goHome();
@@ -589,6 +698,10 @@ function holdCancel(){okBtn.classList.remove('down');clearTimeout(hold);hold=nul
 const KEY={ArrowUp:[-1,0],ArrowDown:[1,0],ArrowLeft:[0,-1],ArrowRight:[0,1]};
 addEventListener('keydown',e=>{
  if(KEY[e.key]){e.preventDefault();act('nav',KEY[e.key]);return}
+ if(mode==='entry'&&!saving&&!busy){
+  if(e.key.length===1&&ent.keys.includes(e.key.toLowerCase())){e.preventDefault();poke();entKey(e.key.toLowerCase());return}
+  if(e.key==='Backspace'&&ent.val){e.preventDefault();poke();entKey('del');return}
+  if(e.key==='Enter'){e.preventDefault();entKey('done');return}}
  if(mode==='search'&&!saving&&!busy){
   if(/^[a-z0-9 ]$/i.test(e.key)){e.preventDefault();poke();type(e.key===' '?'space':e.key.toLowerCase());return}
   if(e.key==='Backspace'&&q){e.preventDefault();poke();type('del');return}}
@@ -612,6 +725,7 @@ tv.addEventListener('click',e=>{
  if(mode==='all'&&(x=t.closest('[data-ai]'))){ai=+x.dataset.ai;drawOv();ok();return}
  if(mode==='set'&&(x=t.closest('[data-si]'))){si=+x.dataset.si;ok();return}
  if(mode==='search'){if(x=t.closest('[data-sk]')){sz='k';sk=+x.dataset.sk;ok()}else if(x=t.closest('[data-sr]'))openResult(+x.dataset.sr);return}
+ if(mode==='entry'&&(x=t.closest('[data-ek]'))){ent.i=+x.dataset.ek;ok();return}
  if(mode==='fc'||mode==='gtv'){back();return}
  if(mode!=='home')return;
  if(x=t.closest('[data-r][data-c]')){r=+x.dataset.r;c=+x.dataset.c;focus();ok()}
@@ -660,7 +774,9 @@ function scene(p){
  return s+'</svg>';
 }
 const walls=[$('#w0'),$('#w1')];let flip=0,photo=0,ptimer;
-const plist=()=>PHOTOS.length?PHOTOS:PH;
+function jfArt(){const seen=new Set();return [...CW,...NEW].filter(x=>x.img&&!seen.has(x.img)&&seen.add(x.img)).map(x=>({url:x.img,cap:x.t}))}
+const plist=()=>{if(S.wall===1)return PH;if(S.wall===2){const a=jfArt();if(a.length)return a}return PHOTOS.length?PHOTOS:PH};
+function applyLights(){tv.classList.toggle('nolights',!S.lights)}
 function showPhoto(first){
  const L=plist();photo%=L.length;const p=L[photo];
  if(first){walls[0].innerHTML=scene(p);walls[0].style.opacity=1;walls[1].style.opacity=0;flip=0}
@@ -672,12 +788,14 @@ function startPhotos(){clearInterval(ptimer);ptimer=setInterval(nextPhoto,INTV[S
 
 /* ---------- Start ---------- */
 if(DEVICE){
- try{MODEL=Android.model();VER=Android.version()}catch(e){}
- readCfg();if(CFG.jellyfin&&CFG.jellyfin.url&&CFG.jellyfin.key)jfState='loading';loadApps();loadRecent();loadPhotos();
+ try{MODEL=Android.model();VER=Android.version();VCODE=Android.versionCode()}catch(e){}
+ readCfg();loadApps();loadRecent();loadPhotos();
  try{WX=JSON.parse(localStorage.getItem('fl_wx'))}catch(e){}
 }
-loadPinned();applySize();showPhoto(true);startPhotos();weather();tick();setInterval(tick,5000);render();poke();
-if(DEVICE){refreshJf(false);loadWeather();setInterval(loadWeather,30*60000);setInterval(()=>{if(mode==='home'&&!busy&&!saving)refreshJf(false)},5*60000)}
+loadPinned();applySize();applyLights();showPhoto(true);startPhotos();weather();tick();setInterval(tick,5000);render();poke();
+if(DEVICE){refreshJf(false);loadWeather();setInterval(loadWeather,30*60000);
+ setTimeout(()=>{try{if(!Android.homeStatus())toast('The Home button isn’t connected yet · Settings › Home button')}catch(e){}},4000);
+ setTimeout(()=>checkUpdate(false),20000);setInterval(()=>checkUpdate(false),12*3600000);setInterval(()=>{if(mode==='home'&&!busy&&!saving)refreshJf(false)},5*60000)}
 const ro=new ResizeObserver(()=>focus(false));ro.observe(tv);
 }
 
