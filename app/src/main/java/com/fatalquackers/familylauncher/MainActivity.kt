@@ -1,0 +1,298 @@
+package com.fatalquackers.familylauncher
+
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.usage.UsageStatsManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ResolveInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.util.Base64
+import android.webkit.JavascriptInterface
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.Toast
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.Executors
+
+/**
+ * Family Home: a full-screen WebView that shows assets/index.html.
+ * The page talks to Android through the "Android" bridge below for
+ * installed apps, launching, recent apps, photos, settings and network.
+ */
+class MainActivity : Activity() {
+
+    companion object {
+        const val PREFS = "family_home"
+        val STOCK = listOf(
+            "com.google.android.apps.tv.launcherx",
+            "com.google.android.tvlauncher",
+            "com.google.android.leanbacklauncher"
+        )
+    }
+
+    private lateinit var web: WebView
+    private val io = Executors.newFixedThreadPool(4)
+    private val ui = Handler(Looper.getMainLooper())
+    private val prefs by lazy { getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
+
+    @Volatile private var appsCache: String? = null
+    @Volatile private var appsCacheAt = 0L
+
+    @SuppressLint("SetJavaScriptEnabled")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        takeConfig(intent)
+        getExternalFilesDir("photos") // make sure the photos folder exists for the TV Tool
+
+        web = WebView(this)
+        web.setBackgroundColor(Color.BLACK)
+        web.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            allowFileAccess = true
+            mediaPlaybackRequiresUserGesture = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+        }
+        web.isFocusable = true
+        web.isFocusableInTouchMode = true
+        web.addJavascriptInterface(Bridge(), "Android")
+        web.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) = true
+        }
+        setContentView(web)
+        web.loadUrl("file:///android_asset/index.html")
+        web.requestFocus()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (takeConfig(intent)) js("window.onConfig&&onConfig()")
+        js("window.onHome&&onHome()")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::web.isInitialized) web.requestFocus()
+        js("window.onResume&&onResume()")
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        // A home screen never closes; the page decides what Back does.
+        js("window.onBack&&onBack()")
+    }
+
+    private fun js(code: String) {
+        if (::web.isInitialized) web.evaluateJavascript(code, null)
+    }
+
+    /** The TV Tool sends settings as: am start ... --es config_b64 <base64 json> */
+    private fun takeConfig(i: Intent?): Boolean {
+        val b64 = i?.getStringExtra("config_b64") ?: return false
+        return try {
+            val json = String(Base64.decode(b64, Base64.DEFAULT), Charsets.UTF_8)
+            JSONObject(json)
+            prefs.edit().putString("config", json).apply()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    inner class Bridge {
+        @JavascriptInterface fun model(): String = Build.MODEL ?: ""
+
+        @JavascriptInterface fun version(): String = try {
+            packageManager.getPackageInfo(packageName, 0).versionName ?: ""
+        } catch (e: Exception) { "" }
+
+        @JavascriptInterface fun config(): String = prefs.getString("config", "{}") ?: "{}"
+
+        @JavascriptInterface fun apps(): String = appsJson()
+
+        @JavascriptInterface fun launch(pkg: String): Boolean = launchPkg(pkg)
+
+        @JavascriptInterface fun recent(max: Int): String = recentJson(max)
+
+        @JavascriptInterface fun photos(): String = photosJson()
+
+        @JavascriptInterface fun get(id: String, url: String, headers: String) = httpGet(id, url, headers)
+
+        @JavascriptInterface fun settings() {
+            ui.post { tryStart(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
+
+        @JavascriptInterface fun googleHome() {
+            ui.post { openStockHome() }
+        }
+
+        /** Opens the Jellyfin client. Jumping to the exact item depends on the client. */
+        @JavascriptInterface fun openItem(pkg: String, itemId: String): Boolean = launchPkg(pkg)
+
+        @JavascriptInterface fun toast(msg: String) {
+            ui.post { Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show() }
+        }
+    }
+
+    // ---------- Apps ----------
+    private fun appsJson(): String {
+        val cached = appsCache
+        if (cached != null && System.currentTimeMillis() - appsCacheAt < 5 * 60_000L) return cached
+        val pm = packageManager
+        val seen = LinkedHashMap<String, ResolveInfo>()
+        for (cat in listOf(Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER)) {
+            val q = Intent(Intent.ACTION_MAIN).addCategory(cat)
+            for (ri in pm.queryIntentActivities(q, 0)) {
+                val p = ri.activityInfo.packageName
+                if (p != packageName && !seen.containsKey(p)) seen[p] = ri
+            }
+        }
+        val arr = JSONArray()
+        for ((p, ri) in seen) {
+            try {
+                val o = JSONObject()
+                o.put("pkg", p)
+                o.put("name", ri.loadLabel(pm).toString())
+                val banner = ri.activityInfo.loadBanner(pm) ?: ri.activityInfo.applicationInfo.loadBanner(pm)
+                if (banner != null) o.put("banner", toDataUrl(banner, 320, 180))
+                else o.put("icon", toDataUrl(ri.loadIcon(pm), 144, 144))
+                arr.put(o)
+            } catch (e: Exception) { /* skip broken app */ }
+        }
+        val s = arr.toString()
+        appsCache = s
+        appsCacheAt = System.currentTimeMillis()
+        return s
+    }
+
+    private fun toDataUrl(d: Drawable, w: Int, h: Int): String {
+        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp)
+        d.setBounds(0, 0, w, h)
+        d.draw(c)
+        val out = ByteArrayOutputStream()
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+        bmp.recycle()
+        return "data:image/png;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+    }
+
+    private fun launchPkg(pkg: String): Boolean {
+        val pm = packageManager
+        val i = pm.getLeanbackLaunchIntentForPackage(pkg) ?: pm.getLaunchIntentForPackage(pkg) ?: return false
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        rememberRecent(pkg)
+        ui.post { tryStart(i) }
+        return true
+    }
+
+    private fun tryStart(i: Intent): Boolean = try {
+        startActivity(i); true
+    } catch (e: Exception) { false }
+
+    private fun rememberRecent(pkg: String) {
+        val list = mutableListOf(pkg)
+        try {
+            val arr = JSONArray(prefs.getString("recent", "[]"))
+            for (k in 0 until arr.length()) {
+                val p = arr.getString(k)
+                if (p != pkg) list.add(p)
+            }
+        } catch (e: Exception) { }
+        prefs.edit().putString("recent", JSONArray(list.take(12)).toString()).apply()
+    }
+
+    /** Recently used apps from the system (needs GET_USAGE_STATS, granted by the TV Tool). */
+    private fun recentJson(max: Int): String {
+        val skip = STOCK.toSet() + setOf(packageName, "com.android.tv.settings", "com.android.systemui",
+            "com.google.android.katniss", "com.google.android.tungsten.setupwraith", "android")
+        val out = mutableListOf<String>()
+        try {
+            val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val now = System.currentTimeMillis()
+            val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_BEST, now - 7L * 86_400_000L, now)
+            if (stats != null) {
+                for (s in stats.filter { it.totalTimeInForeground > 0 && it.packageName !in skip }
+                    .sortedByDescending { it.lastTimeUsed }) {
+                    if (s.packageName !in out) out.add(s.packageName)
+                }
+            }
+        } catch (e: Exception) { }
+        if (out.isEmpty()) {
+            try {
+                val arr = JSONArray(prefs.getString("recent", "[]"))
+                for (k in 0 until arr.length()) out.add(arr.getString(k))
+            } catch (e: Exception) { }
+        }
+        return JSONArray(out.take(maxOf(1, max) * 3)).toString()
+    }
+
+    // ---------- Photos ----------
+    private fun photosJson(): String {
+        val arr = JSONArray()
+        val dir = getExternalFilesDir("photos") ?: return "[]"
+        val exts = setOf("jpg", "jpeg", "png", "webp")
+        dir.listFiles()
+            ?.filter { it.isFile && it.extension.lowercase() in exts }
+            ?.sortedBy { it.name.lowercase() }
+            ?.forEach { arr.put(Uri.fromFile(it).toString()) }
+        return arr.toString()
+    }
+
+    // ---------- Network (Jellyfin, weather) ----------
+    private fun httpGet(id: String, url: String, headers: String) {
+        io.execute {
+            var code = 0
+            var body = ""
+            try {
+                val c = URL(url).openConnection() as HttpURLConnection
+                c.connectTimeout = 8000
+                c.readTimeout = 15000
+                c.setRequestProperty("Accept", "application/json")
+                val h = JSONObject(if (headers.isBlank()) "{}" else headers)
+                val keys = h.keys()
+                while (keys.hasNext()) {
+                    val k = keys.next()
+                    c.setRequestProperty(k, h.getString(k))
+                }
+                code = c.responseCode
+                val stream = if (code in 200..299) c.inputStream else c.errorStream
+                body = stream?.bufferedReader()?.use { it.readText() } ?: ""
+                c.disconnect()
+            } catch (e: Exception) {
+                body = e.message ?: "error"
+            }
+            val script = "window.__net&&__net(" + JSONObject.quote(id) + "," + code + "," + JSONObject.quote(body) + ")"
+            ui.post { js(script) }
+        }
+    }
+
+    // ---------- Google TV home ----------
+    private fun openStockHome() {
+        // Let the Home-button watcher leave Google's home alone for a while.
+        prefs.edit().putLong("allowStockUntil", System.currentTimeMillis() + 15 * 60_000L).apply()
+        for (p in STOCK) {
+            val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                .setPackage(p).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (tryStart(i)) return
+        }
+        prefs.edit().putLong("allowStockUntil", 0L).apply()
+        Toast.makeText(this, "Google TV home isn't available on this TV", Toast.LENGTH_SHORT).show()
+    }
+}
