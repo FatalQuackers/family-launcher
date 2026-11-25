@@ -1,8 +1,14 @@
 package com.fatalquackers.familylauncher
 
 import android.accessibilityservice.AccessibilityService
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
@@ -18,6 +24,30 @@ import android.view.accessibility.AccessibilityEvent
 class HomeWatcher : AccessibilityService() {
 
     private var homeDownAt = 0L
+    private val ui = Handler(Looper.getMainLooper())
+
+    /** When the TV wakes up, show Family Home. */
+    private val screenOn = object : BroadcastReceiver() {
+        override fun onReceive(c: Context, i: Intent) {
+            if (i.action == Intent.ACTION_SCREEN_ON) ui.postDelayed({ openFamily() }, 700)
+        }
+    }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        try {
+            val f = IntentFilter(Intent.ACTION_SCREEN_ON)
+            if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOn, f, Context.RECEIVER_NOT_EXPORTED)
+            else registerReceiver(screenOn, f)
+        } catch (_: Exception) { }
+        // Just switched on: open Family Home.
+        if (SystemClock.elapsedRealtime() < 5 * 60_000L) ui.postDelayed({ openFamily() }, 1500)
+    }
+
+    override fun onDestroy() {
+        try { unregisterReceiver(screenOn) } catch (_: Exception) { }
+        super.onDestroy()
+    }
 
     private fun prefs() = getSharedPreferences(MainActivity.PREFS, Context.MODE_PRIVATE)
 
